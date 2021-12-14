@@ -454,7 +454,7 @@ public class AlgorithmOpt {
 	
 	
 
-	public double solveModel(ResultModel model, boolean hasOutput){
+	/*public double solveModel(ResultModel model, boolean hasOutput){
 
 		IloCplex cplex = model.modelCplex;
 
@@ -479,7 +479,8 @@ public class AlgorithmOpt {
 
 		return -1;
 
-	}
+	}*/
+	
 
 	public void printSolution() {
 		for(int i = 0; i < this.maxProbes; i++) {
@@ -504,4 +505,3 @@ public class AlgorithmOpt {
 
 
 }
-

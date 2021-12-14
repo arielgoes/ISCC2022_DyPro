@@ -10,42 +10,50 @@ public class Cycle implements Cloneable{
 	public int transportationCost;
 	public ArrayList<Integer> pathOverhead;   //for comparison between OptPathPlan and others
 
-	public Cycle() {
-		this.itemPerCycle = new ArrayList<Tuple>();
-		this.nodes = new ArrayList<Integer>();
-		this.links = new ArrayList<Pair<Integer,Integer>>();
-	}
-	
-	public void printCycle() {
-		System.out.println("CIRCUIT:");
-		System.out.println("path (nodes): " + this.nodes);
-		System.out.println("path (links): " + this.links);
-		System.out.println("DEVICE-ITEM:");
-		System.out.println("device-item: " + this.itemPerCycle);
-		
-	}
+public Cycle() {
+	this.itemPerCycle = new ArrayList<Tuple>();
+	this.nodes = new ArrayList<Integer>();
+	this.links = new ArrayList<Pair<Integer,Integer>>();
+}
 
-	public void printCycleWithCapacity() {
-		System.out.println("---------------------------------");
-		System.out.println("CIRCUIT:");
-		System.out.println("path (node): " + this.nodes);
-		System.out.println("path (links): " + this.links);
-		System.out.println("DEVICE-ITEMS:");
-		System.out.println("device-items: " + this.itemPerCycle);
-		System.out.println("Capacity used: " + this.capacity_used + ". Total Capacity: " + this.capacity);
-	}
+public void printCycle() {
+	System.out.println("CIRCUIT:");
+	System.out.println("path (nodes): " + this.nodes);
+	System.out.println("path (links): " + this.links);
+	System.out.println("DEVICE-ITEM:");
+	System.out.println("device-item: " + this.itemPerCycle);
 	
-	@Override
-	public Cycle clone() throws CloneNotSupportedException {
-	   try{
-	       Cycle clonedMyClass = (Cycle)super.clone();
-	       // if you have custom object, then you need create a new one in here
+}
+
+public void printCycleWithCapacity() {
+	System.out.println("---------------------------------");
+	System.out.println("CIRCUIT:");
+	System.out.println("path (node): " + this.nodes);
+	System.out.println("path (links): " + this.links);
+	System.out.println("DEVICE-ITEMS:");
+	System.out.println("device-items: " + this.itemPerCycle);
+	System.out.println("Capacity used: " + this.capacity_used + ". Total Capacity: " + this.capacity);
+}
+
+@Override
+public Cycle clone() throws CloneNotSupportedException {
+   try{
+       Cycle clonedMyClass = (Cycle)super.clone();
+       // if you have custom object, then you need create a new one in here
 	       return clonedMyClass ;
 	   } catch (CloneNotSupportedException e) {
 	       e.printStackTrace();
 	       return new Cycle();
 	   }
-
-  }
+}
+	
+public boolean hasItem(int restrictionItem) {
+	for(int i = 0; i < this.itemPerCycle.size(); i++) {
+		if(this.itemPerCycle.get(i).getItem() == restrictionItem) {
+			return true;
+		}
+	}
+	return false;
+}
 
 }

@@ -31,23 +31,44 @@ public class Teste {
 		int combSize = Integer.parseInt(args[11]); //combinations of size 'k', used on performed statistics
 		int n_internal = Integer.parseInt(args[12]); //internal number of iterations
 		
-		//double seed = 123;
-		double seed = System.currentTimeMillis();
+		long seed = 123;
+		//long seed = System.currentTimeMillis();
+		
+		float[] normalOpStdItem = {(float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05, (float) 0.05};
+		float[] normalOpAvgItem = {(float) 1.1, (float) 3.2, (float) 2.5, (float) 1.7, (float) 0.3, (float) 4.3, (float) 0.452, (float) 0.78, (float) 1.1, (float) 3.2, (float) 2.5, (float) 1.7, (float) 0.3, (float) 4.3, (float) 0.452, (float) 0.78};
 		
 		NetworkInfrastructure infra = null;
 		EdgeRandomization modelER = null;
-		OptPathPlan pathPlanCycles = null;
+		//OptPathPlan pathPlanCycles = null;
 		FixOptPInt fixOpt = null;
 		AlgorithmOpt opt = null; //due to statistics parameters
 		ArrayList<int[]> collectors = new ArrayList<int[]>();
-		
 		KCombinations kComb = new KCombinations();
+		MonitoringApp monApps = new MonitoringApp();
+		
 		int[] array = new int[networkSize];
 		for(int i = 0; i < networkSize; i++) {
 			array[i] = i;
 		}
+
+		//Monitoring Apps' parameters
+		int numberMonitoringApp = 6;
+		int numMaxSpatialDependencies = 4;
+		int maxSizeSpatialDependency = 4;
+		int maxFrequency = 5;
+		
+		float percentDevicesAnomaly = (float) 0.5;
+ 		int lastingTimeAnomaly = 5;
+ 		int intervalTimeUnitAnomaly = 5;
+ 		int window = 10;
+ 		//IloCplex cplex = new IloCplex();
 		
 		String pathInstance = ""; //used in case one desires to parse a data file as input
+		
+		ArrayList<MonitoringApp> monitoringApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter);
+		
+	
+		monApps.printMonitoringApps(monitoringApps);
 		
 		//creating infrastructure and generating a random topology
 		infra = new NetworkInfrastructure(networkSize, pathInstance, telemetryItemsRouter, maxSizeTelemetryItemsRouter, (long) seed);
@@ -67,9 +88,8 @@ public class Teste {
 			System.out.println("-0" + ";" + "NaN" + ";" 
 					+ infra.size + ";" + infra.telemetryItemsRouter + ";" + infra.maxSizeTelemetryItemsRouter 
 					+ ";" + infra.seed);
-		}
-		
-		else {
+		}else {
+			
 			int bestVal = Integer.MAX_VALUE;
 			EdgeRandomization bestER = new EdgeRandomization(infra, capacityProbe, (long) seed, maxProbes);
 			double timeER = 0;
@@ -117,63 +137,63 @@ public class Teste {
 				
 					// -Metric 1: Data overhead: collector's distance (minimum distance)
 					int bestMinDistCollectorER = Integer.MAX_VALUE;
-					int bestMinDistCollectorOPP_Cycles = Integer.MAX_VALUE;
-					int bestMinDistCollectorFixOpt = Integer.MAX_VALUE;
+					//int bestMinDistCollectorOPP_Cycles = Integer.MAX_VALUE;
+					//int bestMinDistCollectorFixOpt = Integer.MAX_VALUE;
 					int minDistCollectorER = Integer.MAX_VALUE;
-					int minDistCollectorOPP_Cycles = Integer.MAX_VALUE;
-					int minDistCollectorFixOpt = Integer.MAX_VALUE;
+					//int minDistCollectorOPP_Cycles = Integer.MAX_VALUE;
+					//int minDistCollectorFixOpt = Integer.MAX_VALUE;
 					int bestK_ER = Integer.MAX_VALUE;
-					int bestK_OPP_Cycles = Integer.MAX_VALUE;
-					int bestK_FixOpt = Integer.MAX_VALUE;
+					//int bestK_OPP_Cycles = Integer.MAX_VALUE;
+					//int bestK_FixOpt = Integer.MAX_VALUE;
 					
 					//search for the best combination subset and set it as the set of collectors
 					for(int k = 0; k < collectors.size(); k++) {
 						minDistCollectorER = sts.transportationOverhead(bestER, bestER.cycles, fixOpt, opt, collectors.get(k), maxProbes, 2);
-						minDistCollectorOPP_Cycles = sts.transportationOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(k), maxProbes, 2);
-						minDistCollectorFixOpt = sts.transportationOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(k), maxProbes, 1);
+						//minDistCollectorOPP_Cycles = sts.transportationOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(k), maxProbes, 2);
+						//minDistCollectorFixOpt = sts.transportationOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(k), maxProbes, 1);
 			
 						if(minDistCollectorER < bestMinDistCollectorER) {
 							bestMinDistCollectorER = minDistCollectorER;
 							bestK_ER = k;
 						}
 						
-						if(minDistCollectorOPP_Cycles < bestMinDistCollectorOPP_Cycles) {
+						/*if(minDistCollectorOPP_Cycles < bestMinDistCollectorOPP_Cycles) {
 							bestMinDistCollectorOPP_Cycles = minDistCollectorOPP_Cycles;
 							bestK_OPP_Cycles = k;
-						}
+						}*/
 						
-						if(minDistCollectorFixOpt < bestMinDistCollectorFixOpt) {
+						/*if(minDistCollectorFixOpt < bestMinDistCollectorFixOpt) {
 							bestMinDistCollectorFixOpt = minDistCollectorFixOpt;
 							bestK_FixOpt = k;
-						}
+						}*/
 						
 					}
 					
 					//maping (collector, # of probes)
 					HashMap<Integer,Integer> mapCollectorER = new HashMap<Integer,Integer>();
-					HashMap<Integer,Integer> mapCollectorOPP_Cycles = new HashMap<Integer,Integer>();
+					//HashMap<Integer,Integer> mapCollectorOPP_Cycles = new HashMap<Integer,Integer>();
 					HashMap<Integer,Integer> mapCollectorFixOpt = new HashMap<Integer,Integer>();
 					
 					for(Integer collector: collectors.get(bestK_ER)) {
 						mapCollectorER.put(collector, 0);
 					}
 					
-					for(Integer collector: collectors.get(bestK_OPP_Cycles)) {
+					/*for(Integer collector: collectors.get(bestK_OPP_Cycles)) {
 						mapCollectorOPP_Cycles.put(collector, 0);
-					}
+					}*/
 					
-					for(Integer collector: collectors.get(bestK_FixOpt)) {
+					/*for(Integer collector: collectors.get(bestK_FixOpt)) {
 						mapCollectorFixOpt.put(collector, 0);
-					}
+					}*/
 					
 					
 					// -Metric 2: Collector overhead: # of probes per collector
 					double collectorOverheadER[] = new double[3];
-					double collectorOverheadOPP_Cycles[] = new double[3];
-					double collectorOverheadFixOpt[] = new double[3];
+					//double collectorOverheadOPP_Cycles[] = new double[3];
+					//double collectorOverheadFixOpt[] = new double[3];
 					collectorOverheadER = sts.collectorOverhead(bestER, bestER.cycles, fixOpt, opt, collectors.get(bestK_ER), mapCollectorER, maxProbes, 2);
-					collectorOverheadOPP_Cycles = sts.collectorOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(bestK_OPP_Cycles), mapCollectorOPP_Cycles, maxProbes, 2);
-					collectorOverheadFixOpt = sts.collectorOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(bestK_FixOpt), mapCollectorFixOpt, maxProbes, 1);
+					//collectorOverheadOPP_Cycles = sts.collectorOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(bestK_OPP_Cycles), mapCollectorOPP_Cycles, maxProbes, 2);
+					//collectorOverheadFixOpt = sts.collectorOverhead(modelER, pathPlanCycles.Q, fixOpt, opt, collectors.get(bestK_FixOpt), mapCollectorFixOpt, maxProbes, 1);
 	
 					String mapCollectorER_collectors = new String();
 					String mapCollectorER_probes = new String();
@@ -183,44 +203,44 @@ public class Teste {
 						
 					}
 					
-					String mapCollectorOPPcycles_collectors = new String();
+					/*String mapCollectorOPPcycles_collectors = new String();
 					String mapCollectorOPPcycles_probes = new String();
 					for(Integer collector: collectors.get(bestK_OPP_Cycles)) {
 						mapCollectorOPPcycles_collectors += ";" + collector;
 						mapCollectorOPPcycles_probes += ";" + mapCollectorOPP_Cycles.get(collector);
-					}
+					}*/
 					
-					String mapCollectorFixOpt_collectors = new String();
+					/*String mapCollectorFixOpt_collectors = new String();
 					String mapCollectorFixOpt_probes = new String();
 					for(Integer collector: collectors.get(bestK_FixOpt)) {
 						mapCollectorFixOpt_collectors += ";" + collector;
 						mapCollectorFixOpt_probes += ";" + mapCollectorFixOpt.get(collector);
-					}
+					}*/
 					
 					
 					// -Metric 3: Average Probe Usage: (min, max, avg)
 					double[] probeUsageER = new double[3];
-					double[] probeUsageOPP_Cycles = new double[3];
-					double[] probeUsageFixOpt = new double[3];
+					//double[] probeUsageOPP_Cycles = new double[3];
+					//double[] probeUsageFixOpt = new double[3];
 					probeUsageER = sts.probeUsage(fixOpt, opt, maxProbes, bestER.cycles, capacityProbe, 2);
-					probeUsageOPP_Cycles = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 2);
-					probeUsageFixOpt = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 1);
+					//probeUsageOPP_Cycles = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 2);
+					//probeUsageFixOpt = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 1);
 					
 					// -Metric 4: Device overhead: # of probes/paths pass through devices (min, max, avg)
 					double[] devOverheadER = new double[3];
-					double[] devOverheadOPP_Cycles = new double[3];
-					double[] devOverheadFixOpt = new double[3];
+					//double[] devOverheadOPP_Cycles = new double[3];
+					//double[] devOverheadFixOpt = new double[3];
 					devOverheadER = sts.devOverhead(fixOpt, opt, bestER.cycles, maxProbes, networkSize, 2);
-					devOverheadOPP_Cycles = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 2);
-					devOverheadFixOpt = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 1);
+					//devOverheadOPP_Cycles = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 2);
+					//devOverheadFixOpt = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 1);
 					
 					// -Metric 5: Link overhead: # of probes/paths pass through links (min, max, avg)
 					double[] linkOverheadER = new double[3];
-					double[] linkOverheadOPP_Cycles = new double[3];
-					double[] linkOverheadFixOpt = new double[3];
+					//double[] linkOverheadOPP_Cycles = new double[3];
+					//double[] linkOverheadFixOpt = new double[3];
 					linkOverheadER = sts.linkOverhead(infra, fixOpt, opt, maxProbes, bestER.cycles, networkSize, 2);
-					linkOverheadOPP_Cycles = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 2);
-					linkOverheadFixOpt = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 1);
+					//linkOverheadOPP_Cycles = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 2);
+					//linkOverheadFixOpt = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 1);
 					
 					System.out.println("ER" + ";" + bestER.cycles.size() + ";" + timeER_total
 							+ ";" + bestER.infra.size + ";" + bestER.infra.telemetryItemsRouter
@@ -289,6 +309,7 @@ public class Teste {
 														+ ";" + linkOverheadER[2] + ";" + "X" + ";" + bestER.seed + ";"
 														+ "COL" + "X" + ";" + "#PRB" + "X");
 				
+				
 				/*System.out.println("OPPcycles" + ";" + pathPlanCycles.Q.size() + ";" + timeOPPCycles
 						+ ";" + pathPlanCycles.infra.size + ";" + pathPlanCycles.infra.telemetryItemsRouter
 						+ ";" + pathPlanCycles.infra.maxSizeTelemetryItemsRouter + ";" + maxProbes + ";" + capacityProbe 
@@ -309,7 +330,10 @@ public class Teste {
 														+ ";" + linkOverheadFixOpt[2] + ";" + "X" + ";" + fixOpt.seed + ";"
 			
 														+ "COL" + "X" + ";" + "#PRB" + "X");*/
+				
+				
 			}
 		}
 	}
+	
 }
