@@ -111,6 +111,11 @@ public class Teste {
 				timeER_total+= timeER;
 			}
 			
+			ArrayList<Integer> unsatisfiedMonItems = monApps.MonRestrictionVerifier(bestER.cycles, monitoringApps);
+			for(int i = 0; i < unsatisfiedMonItems.size(); i++) {
+				System.out.println("item: " + unsatisfiedMonItems.get(i));
+			}
+			
 			//INFOCOMM probe cycles
 			/*double timeOPPCycles = System.nanoTime(); 
 			pathPlanCycles = new OptPathPlan(infra, capacityProbe, (long) seed, true);

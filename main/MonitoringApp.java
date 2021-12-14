@@ -177,7 +177,7 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 	
 }
 
-public void MonRestrictionVerifier(Hashtable<Integer, Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
+public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
 	//verify spatial constraints across probes
 	int restrictionItem = -1;
 	ArrayList<Integer> unsatisfiedMonItems = new ArrayList<Integer>(); //adds unsatisfied items after iterating all cycles
@@ -187,16 +187,22 @@ public void MonRestrictionVerifier(Hashtable<Integer, Cycle> cycles, ArrayList<M
 			for(int l = 0; l < monitoringApps.get(i).spatialRequirements.get(k).size(); l++) {		
 				restrictionItem = monitoringApps.get(i).spatialRequirements.get(k).get(l);
 				int numCycles = cycles.size();
+				boolean hasItem = false;
 				for(int z = 0; z < numCycles; z++) {
 					if(cycles.get(z).hasItem(restrictionItem)) {
+						hasItem = true;
 						break;
 					}
 				}
+				if(!hasItem) {
+					unsatisfiedMonItems.add(restrictionItem);	
+				}
+				
 			}
 		}
 	}
 	
-	
+	return unsatisfiedMonItems;
 }
 
 }
