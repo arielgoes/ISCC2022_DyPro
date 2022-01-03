@@ -1,6 +1,8 @@
 package heuristics;
 
 import java.util.ArrayList;
+import main.MonitoringApp;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -944,5 +946,44 @@ public class EdgeRandomization {
 		}
 		return different;
 	}
+	
+	
+	//We assume (by now) the spatial requirements may be collected by any probe and all monitoring apps have access to all probes across the topology
+	public ArrayList<ArrayList<ArrayList<Integer>>> removeSomeItemsMonApps(ArrayList<MonitoringApp> monApps, ArrayList<Cycle> cycles) {
+		ArrayList<ArrayList<ArrayList<Integer>>> spatialAnomalies = new ArrayList<ArrayList<ArrayList<Integer>>>(); // probe, device, item
+		
+		int restrictionItem = -1;
+		int cycle_id = 0;
+		int spatialReq_id = 0;
+		for(Cycle c: cycles) {
+			for(int i = 0; i < monApps.size(); i++) {
+				int numSpatialDependencies = monApps.get(i).spatialRequirements.size();
+				for(int k = 0; k < numSpatialDependencies; k++) {
+					for(int l = 0; l < monApps.get(i).spatialRequirements.get(k).size(); l++) {		
+						restrictionItem = monApps.get(i).spatialRequirements.get(k).get(l);
+						
+						for(Tuple t: c.itemPerCycle) {
+							if(Math.random() >= 0.5) { // random [0,1] (remove item)
+								if(c.hasItem(restrictionItem)) {
+									// ADD TO ARRAYLIST
+									c.itemPerCycle.remove(t); // OBSERVACAO >>>>>> verificar se está funcionando mesmo!!!
+								}
+							}else { // (do not remove item)
+								continue;
+							}
+						}
+					}
+				}
+				spatialReq_id++;
+			}
+			
+			cycle_id++;
+		}
+		
+		return spatialAnomalies;
+	}
+	
+	
+	
 
 }

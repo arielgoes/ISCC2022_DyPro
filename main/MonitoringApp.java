@@ -13,7 +13,7 @@ public class MonitoringApp {
 	
 	
 	//{ {0,2,3}, {4,5} } 
-	ArrayList<ArrayList<Integer>> spatialRequirements;
+	public ArrayList<ArrayList<Integer>> spatialRequirements;
 	
 	//<0, 2>
 	//<1, 1>
@@ -177,7 +177,8 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 	
 }
 
-public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
+//checks whether all restriction (spatial) items are covered by one or more probes
+/*public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
 	//verify spatial constraints across probes
 	int restrictionItem = -1;
 	ArrayList<Integer> unsatisfiedMonItems = new ArrayList<Integer>(); //adds unsatisfied items after iterating all cycles
@@ -203,6 +204,41 @@ public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayL
 	}
 	
 	return unsatisfiedMonItems;
+}*/
+
+//checks whether all restriction (spatial) items are covered by a single probe cycle (UNDER DEVELOPMENT)
+public ArrayList<Integer> MonRestrictionVerifier2(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
+	//verify spatial constraints across probes
+	int restrictionItem = -1;
+	ArrayList<Integer> unsatisfiedMonItems = new ArrayList<Integer>(); //adds unsatisfied items after iterating all cycles
+	int numCycles = cycles.size();
+	
+	for(int z = 0; z < numCycles; z++) {
+		for(int i = 0; i < monitoringApps.size(); i++) {
+			int numSpatialDependencies = monitoringApps.get(i).spatialRequirements.size();
+			for(int k = 0; k < numSpatialDependencies; k++) {
+				for(int l = 0; l < monitoringApps.get(i).spatialRequirements.get(k).size(); l++) {		
+					restrictionItem = monitoringApps.get(i).spatialRequirements.get(k).get(l);
+					if(!cycles.get(z).hasItem(restrictionItem)) {
+						unsatisfiedMonItems.add(restrictionItem);
+					}
+				}
+			}
+		}
+	}
+	
+	
+	return unsatisfiedMonItems;
 }
+
+
+
+
+
+
+
+
+
+
 
 }
