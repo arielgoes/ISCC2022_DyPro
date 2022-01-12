@@ -10,10 +10,8 @@ import heuristics.Cycle;
 public class MonitoringApp {
 
 	//Need to define monitoring requirements
-	
-	
-	//{ {0,2,3}, {4,5} } 
-	public ArrayList<ArrayList<Integer>> spatialRequirements;
+	public ArrayList<ArrayList<Integer>> spatialRequirements; //{ {0,2,3}, {4,5} }
+	public ArrayList<Integer> deviceToBeCollected; // [ 3, 5 ] --> e.g., items '{0,2,3}' must be collected from device '3' and so on...
 	
 	//<0, 2>
 	//<1, 1>
@@ -22,24 +20,23 @@ public class MonitoringApp {
 	ArrayList<Integer> lastTimeCollected;  //it stores 
 	
 public MonitoringApp() {
-		
-		this.spatialRequirements  = new ArrayList<ArrayList<Integer>>();
-		this.temporalRequirements = new ArrayList<Integer>();
-		this.lastTimeCollected    = new ArrayList<Integer>();
-	}
+	this.spatialRequirements  = new ArrayList<ArrayList<Integer>>();
+	this.temporalRequirements = new ArrayList<Integer>();
+	this.lastTimeCollected    = new ArrayList<Integer>();
+	this.deviceToBeCollected  = new ArrayList<Integer>(); //it tells me from what device a spatial requirement must be satisfied from
+}
 
 	
 ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, int numMaxSpatialDependencies,
-			int maxSizeSpatialDependency, int maxFrequency, int telemetryItemsRouter){
+			int maxSizeSpatialDependency, int maxFrequency, int telemetryItemsRouter, int networkSize){
 
 		Random rnd = new Random(seed);
 		int telemetryItems;
 		int maxTelemetryItems = telemetryItemsRouter; //max telemetry items in a router.
 		int telemetryCandidate;
 		boolean hasItem = false;
-
+		
 		int contFail = 0;
-
 
 		ArrayList<MonitoringApp> monitoringApps = new ArrayList<MonitoringApp>();
 
@@ -68,6 +65,7 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 					size = rnd.nextInt(maxSizeSpatialDependency+1);
 
 				}while(size <= 1);
+				
 				
 				ArrayList<Integer> spatialItems = null;
 				
@@ -104,6 +102,7 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 				if(spatialItems != null) {
 					
 					mon.spatialRequirements.add(spatialItems);
+					mon.deviceToBeCollected.add(rnd.nextInt(networkSize));
 					
 					int freq;
 					
@@ -115,22 +114,20 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 					
 				}
 				
-				
 			}
 			//initialize history
 			for(int j = 0; j < mon.spatialRequirements.size(); j++) {
-				
-				mon.lastTimeCollected.add(0); 
+				mon.lastTimeCollected.add(0);
 			}
 			
 			monitoringApps.add(mon);
-			
 			
 		}
 
 		return monitoringApps;
 }
 	
+
 private boolean hasItemList(MonitoringApp monitoring, ArrayList<Integer> spatialItems) {
 		
 		boolean hasList = false;
@@ -152,9 +149,11 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 	for(int i = 0; i < monitoringApps.size(); i++) {
 		System.out.println("Monitoring App " + i);
 		int numSpatialDependencies = monitoringApps.get(i).spatialRequirements.size();
+		//int numDevToBeCollected = monitoringApps.get(i).deviceToBeCollected.size();
+		//System.out.println("NUM SPATIAL: " + numSpatialDependencies + " NUM COLLECTED: " + numDevToBeCollected);
 		for(int k = 0; k < numSpatialDependencies; k++) {
 			
-			System.out.println("   Spatial Req: " + k);
+			System.out.println("   Spatial Req: " + k + " | Device #" + monitoringApps.get(i).deviceToBeCollected.get(k));
 			
 			for(int l = 0; l < monitoringApps.get(i).spatialRequirements.get(k).size(); l++) {		
 				System.out.printf("%d ", monitoringApps.get(i).spatialRequirements.get(k).get(l));	
@@ -178,7 +177,7 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 }
 
 //checks whether all restriction (spatial) items are covered by one or more probes
-/*public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
+public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
 	//verify spatial constraints across probes
 	int restrictionItem = -1;
 	ArrayList<Integer> unsatisfiedMonItems = new ArrayList<Integer>(); //adds unsatisfied items after iterating all cycles
@@ -204,10 +203,10 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 	}
 	
 	return unsatisfiedMonItems;
-}*/
+}
 
 //checks whether all restriction (spatial) items are covered by a single probe cycle (UNDER DEVELOPMENT)
-public ArrayList<Integer> MonRestrictionVerifier2(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
+/*public ArrayList<Integer> MonRestrictionVerifier2(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
 	//verify spatial constraints across probes
 	int restrictionItem = -1;
 	ArrayList<Integer> unsatisfiedMonItems = new ArrayList<Integer>(); //adds unsatisfied items after iterating all cycles
@@ -229,7 +228,7 @@ public ArrayList<Integer> MonRestrictionVerifier2(ArrayList<Cycle> cycles, Array
 	
 	
 	return unsatisfiedMonItems;
-}
+}*/
 
 
 

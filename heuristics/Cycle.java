@@ -9,6 +9,7 @@ public class Cycle implements Cloneable{
 	public int capacity_used;
 	public int transportationCost;
 	public ArrayList<Integer> pathOverhead;   //for comparison between OptPathPlan and others
+	public int cycle_id;
 
 public Cycle() {
 	this.itemPerCycle = new ArrayList<Tuple>();
@@ -22,6 +23,7 @@ public void printCycle() {
 	System.out.println("path (links): " + this.links);
 	System.out.println("DEVICE-ITEM:");
 	System.out.println("device-item: " + this.itemPerCycle);
+	System.out.println("cycle id (probe id): " + this.cycle_id);
 	
 }
 
@@ -33,6 +35,7 @@ public void printCycleWithCapacity() {
 	System.out.println("DEVICE-ITEMS:");
 	System.out.println("device-items: " + this.itemPerCycle);
 	System.out.println("Capacity used: " + this.capacity_used + ". Total Capacity: " + this.capacity);
+	System.out.println("cycle id (probe id): " + this.cycle_id);
 }
 
 @Override

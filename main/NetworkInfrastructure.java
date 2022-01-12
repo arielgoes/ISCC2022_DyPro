@@ -22,19 +22,22 @@ public class NetworkInfrastructure {
 	public int[][] items; //row = routers, col = items
 	public int telemetryItemsRouter;	//total number of possible existing items in any router
 	public int maxSizeTelemetryItemsRouter; //max possible item size
+	public int[] itemPriority;
 	public long seed;
 	
 	public NetworkInfrastructure(int size, String filePath, int telemetryItemsRouter, int maxSizeTelemetryItemsRouter, long seed) {
 		
-		this.filePath = filePath;
 		this.size = size;
+		this.filePath = filePath;
+		this.numTelemetryItemsRouter = new int[size];
+		this.items = new int[size][telemetryItemsRouter];
 		this.telemetryItemsRouter = telemetryItemsRouter;
 		this.maxSizeTelemetryItemsRouter = maxSizeTelemetryItemsRouter;
 		this.graph = new int[size][size];
 		this.dist = new int[size][size];
-		this.numTelemetryItemsRouter = new int[size];
-		this.items = new int[size][telemetryItemsRouter];
+		this.itemPriority = new int[telemetryItemsRouter];
 		this.seed = seed;
+		
 		
 	}
 	
@@ -308,10 +311,10 @@ public class NetworkInfrastructure {
 		
 	}
 	
-	void generateRndTopology(double linkProbability) {
+	void generateRndTopology(double linkProbability, long seed) {
 		
-		//Random rnd = new Random(seed);
-		Random rnd = new Random(123);
+		Random rnd = new Random(seed);
+		//Random rnd = new Random(123);
 		
 		for(int i = 0; i < size; i++) {
 			boolean forceToLink = true;
@@ -366,6 +369,7 @@ public class NetworkInfrastructure {
 			do {
 				//sizeTelemetryItems[j] = 2;rnd.nextInt(maxSizeTelemetryItemsRouter);
 				sizeTelemetryItems[j] = rnd.nextInt(maxSizeTelemetryItemsRouter);
+				itemPriority[j] = rnd.nextInt(maxSizeTelemetryItemsRouter);
 				//System.out.println("sizeTelemetryItems[" + j + "] = " + sizeTelemetryItems[j]);
 			}while(sizeTelemetryItems[j] == 0);
 		}

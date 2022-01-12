@@ -65,7 +65,7 @@ public class Teste {
 		
 		String pathInstance = ""; //used in case one desires to parse a data file as input
 		
-		ArrayList<MonitoringApp> monitoringApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter);
+		ArrayList<MonitoringApp> monitoringApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, networkSize);
 		
 	
 		monApps.printMonitoringApps(monitoringApps);
@@ -73,7 +73,7 @@ public class Teste {
 		//creating infrastructure and generating a random topology
 		infra = new NetworkInfrastructure(networkSize, pathInstance, telemetryItemsRouter, maxSizeTelemetryItemsRouter, (long) seed);
 		infra.filePath = pathInstance;
-		infra.generateRndTopology(0.7);
+		infra.generateRndTopology(0.7, seed);
 
 		
 		//item size verification
@@ -111,10 +111,19 @@ public class Teste {
 				timeER_total+= timeER;
 			}
 			
-			ArrayList<Integer> unsatisfiedMonItems = monApps.MonRestrictionVerifier(bestER.cycles, monitoringApps);
+			//bestER.removeSomeItemsMonApps(monitoringApps, bestER.cycles);
+			/*int sizeCycles = bestER.cycles.size();
+			for(int i = 0; i < sizeCycles; i++) {
+				bestER.cycles.get(i).printCycleWithCapacity();
+			}*/
+			//bestER.cycles.get(0).printCycleWithCapacity();
+			
+			/*ArrayList<Integer> unsatisfiedMonItems = monApps.MonRestrictionVerifier(bestER.cycles, monitoringApps);
 			for(int i = 0; i < unsatisfiedMonItems.size(); i++) {
 				System.out.println("item: " + unsatisfiedMonItems.get(i));
-			}
+			}*/
+			
+			
 			
 			//INFOCOMM probe cycles
 			/*double timeOPPCycles = System.nanoTime(); 

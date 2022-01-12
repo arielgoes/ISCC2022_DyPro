@@ -561,16 +561,21 @@ public class EdgeRandomization {
 	public Hashtable<Integer, Cycle> convertToCycle() {
 		Hashtable<Integer, Cycle> cyclesER = new Hashtable<Integer, Cycle>();
 		
+		int cycle_id = 0;
 		for(int i = 0; i < this.cyclesFinal.size(); i++) {
 			int j = 1;
+			
+			
 			ArrayList<Integer> path = new ArrayList<Integer>();
 			Cycle c = new Cycle();
+			c.cycle_id = cycle_id;
 			c.transportationCost = 0;
 			
 			int capacityUsed = 0;
 			
 			for(Pair<Integer, Integer> p: this.deviceItemFinal.get(i)) {
 				capacityUsed += this.infra.sizeTelemetryItems[p.second];
+				
 			}
 			
 			
@@ -602,6 +607,8 @@ public class EdgeRandomization {
 			c.itemPerCycle = devicesItems;
 			cyclesER.put(i, c);
 			cycles.add(c);
+			
+			cycle_id++;
 		}
 	
 		return cyclesER;
@@ -948,17 +955,17 @@ public class EdgeRandomization {
 	}
 	
 	
-	//We assume (by now) the spatial requirements may be collected by any probe and all monitoring apps have access to all probes across the topology
+	//We assume the spatial requirements may be collected by any probe and all monitoring apps have access to all probes across the topology
 	public ArrayList<ArrayList<ArrayList<Integer>>> removeSomeItemsMonApps(ArrayList<MonitoringApp> monApps, ArrayList<Cycle> cycles) {
 		ArrayList<ArrayList<ArrayList<Integer>>> spatialAnomalies = new ArrayList<ArrayList<ArrayList<Integer>>>(); // probe, device, item
 		
 		int restrictionItem = -1;
 		int cycle_id = 0;
 		int spatialReq_id = 0;
-		for(Cycle c: cycles) {
-			for(int i = 0; i < monApps.size(); i++) {
+		for(Cycle c: cycles) { //cycles
+			for(int i = 0; i < monApps.size(); i++) { //mon apps 
 				int numSpatialDependencies = monApps.get(i).spatialRequirements.size();
-				for(int k = 0; k < numSpatialDependencies; k++) {
+				for(int k = 0; k < numSpatialDependencies; k++) { //iterate over mon apps' spatial requirements (items)
 					for(int l = 0; l < monApps.get(i).spatialRequirements.get(k).size(); l++) {		
 						restrictionItem = monApps.get(i).spatialRequirements.get(k).get(l);
 						
@@ -966,7 +973,12 @@ public class EdgeRandomization {
 							if(Math.random() >= 0.5) { // random [0,1] (remove item)
 								if(c.hasItem(restrictionItem)) {
 									// ADD TO ARRAYLIST
-									c.itemPerCycle.remove(t); // OBSERVACAO >>>>>> verificar se está funcionando mesmo!!!
+									
+									System.out.println("TBD TBD");
+									//c.printCycleWithCapacity();
+									//c.itemPerCycle.remove(t); // OBSERVACAO >>>>>> verificar se está funcionando mesmo!!!
+									//System.out.println("after removal...");
+									//c.printCycleWithCapacity();
 								}
 							}else { // (do not remove item)
 								continue;
