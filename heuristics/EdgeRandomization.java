@@ -62,37 +62,37 @@ public class EdgeRandomization {
 		
 		
 		//start shortest path all for all
-				int count = 0;
-				for(int i = 0; i < this.infra.size; i++) {
-					for(int j = 0; j < this.infra.size; j++) {
-						ArrayList<Integer> shortPath = new ArrayList<Integer>();
-						shortPath = this.infra.getShortestPath(i, j);
-						//System.out.println("nodeA " + i + " nodeB: " + j + " shortPath: " + shortPath);
-						if(shortPath.size() > 0) {
-							
-							if(i == j) {
-								this.costShortestPath[i][j] = Integer.MAX_VALUE;
-							}else if(i > j) {
-								continue;
-							}else{
-								this.costShortestPath[i][j] = shortPath.size() - 1;
-								this.costShortestPath[j][i] = shortPath.size() - 1;
-							}
-						}else {
-							count++;
-							this.costShortestPath[i][j] = Integer.MAX_VALUE;
-						}
+		int count = 0;
+		for(int i = 0; i < this.infra.size; i++) {
+			for(int j = 0; j < this.infra.size; j++) {
+				ArrayList<Integer> shortPath = new ArrayList<Integer>();
+				shortPath = this.infra.getShortestPath(i, j);
+				//System.out.println("nodeA " + i + " nodeB: " + j + " shortPath: " + shortPath);
+				if(shortPath.size() > 0) {
+					
+					if(i == j) {
+						this.costShortestPath[i][j] = Integer.MAX_VALUE;
+					}else if(i > j) {
+						continue;
+					}else{
+						this.costShortestPath[i][j] = shortPath.size() - 1;
+						this.costShortestPath[j][i] = shortPath.size() - 1;
 					}
+				}else {
+					count++;
+					this.costShortestPath[i][j] = Integer.MAX_VALUE;
 				}
-				
-				//print cost distance
-				/*System.out.println("COST-DISTANCE");
-				for(int i = 0; i < this.infra.size; i++) {
-					for(int j = 0; j < this.infra.size; j++) {
-						System.out.printf("[%d][%d]=%d ", i, j, this.costShortestPath[i][j]);
-					}
-					System.out.println("");
-				}*/
+			}
+		}
+		
+		//print cost distance
+		/*System.out.println("COST-DISTANCE");
+		for(int i = 0; i < this.infra.size; i++) {
+			for(int j = 0; j < this.infra.size; j++) {
+				System.out.printf("[%d][%d]=%d ", i, j, this.costShortestPath[i][j]);
+			}
+			System.out.println("");
+		}*/
 		
 		
 	}

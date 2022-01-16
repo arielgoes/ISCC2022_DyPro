@@ -7,7 +7,7 @@ import java.util.Random;
 
 import heuristics.Cycle;
 
-public class MonitoringApp {
+public class MonitoringApp implements Cloneable{
 
 	//Need to define monitoring requirements
 	public ArrayList<ArrayList<Integer>> spatialRequirements; //{ {0,2,3}, {4,5} }
@@ -24,6 +24,18 @@ public MonitoringApp() {
 	this.temporalRequirements = new ArrayList<Integer>();
 	this.lastTimeCollected    = new ArrayList<Integer>();
 	this.deviceToBeCollected  = new ArrayList<Integer>(); //it tells me from what device a spatial requirement must be satisfied from
+}
+
+@Override
+public MonitoringApp clone() throws CloneNotSupportedException{
+	try{
+       MonitoringApp clonedMyClass = (MonitoringApp)super.clone();
+       // if you have custom object, then you need create a new one in here
+	   	   return clonedMyClass;
+	   } catch (CloneNotSupportedException e) {
+	       e.printStackTrace();
+	       return new MonitoringApp();
+	   }
 }
 
 	

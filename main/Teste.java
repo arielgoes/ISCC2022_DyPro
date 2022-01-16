@@ -10,6 +10,7 @@ import heuristics.EdgeRandomization;
 import heuristics.FixOptPInt;
 import heuristics.HeuristicAugmentMerge;
 import heuristics.KCombinations;
+import heuristics.MonAppSpatialTemporalApproaches;
 import heuristics.OptPathPlan;
 
 public class Teste {
@@ -111,17 +112,8 @@ public class Teste {
 				timeER_total+= timeER;
 			}
 			
-			//bestER.removeSomeItemsMonApps(monitoringApps, bestER.cycles);
-			/*int sizeCycles = bestER.cycles.size();
-			for(int i = 0; i < sizeCycles; i++) {
-				bestER.cycles.get(i).printCycleWithCapacity();
-			}*/
-			//bestER.cycles.get(0).printCycleWithCapacity();
-			
-			/*ArrayList<Integer> unsatisfiedMonItems = monApps.MonRestrictionVerifier(bestER.cycles, monitoringApps);
-			for(int i = 0; i < unsatisfiedMonItems.size(); i++) {
-				System.out.println("item: " + unsatisfiedMonItems.get(i));
-			}*/
+			MonAppSpatialTemporalApproaches dynamicMonApp = new MonAppSpatialTemporalApproaches(infra, seed);
+			dynamicMonApp.firstApproach(monitoringApps, capacityProbe, monApps);
 			
 			
 			
