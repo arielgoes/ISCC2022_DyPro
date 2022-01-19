@@ -174,7 +174,7 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 		}
 	}
 	
-	for(int i = 0; i < monitoringApps.size(); i++) {
+	/*for(int i = 0; i < monitoringApps.size(); i++) {
 		System.out.println("Monitoring App " + i);
 		int numTemporalDependencies = monitoringApps.get(i).temporalRequirements.size();
 		for(int k = 0; k < numTemporalDependencies; k++) {
@@ -183,7 +183,7 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 			System.out.printf("%d ", monitoringApps.get(i).temporalRequirements.get(k));
 			System.out.println(" ");
 		}
-	}
+	}*/
 	
 	
 }
