@@ -70,7 +70,6 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 			
 			for(int j = 0; j < telemetryItems; j++) {
 				
-				
 				int size;
 				
 				do {

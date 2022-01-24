@@ -113,8 +113,8 @@ public class Teste {
 			}
 			
 			MonAppSpatialTemporalApproaches dynamicMonApp = new MonAppSpatialTemporalApproaches(infra, seed);
-			dynamicMonApp.firstApproach(monitoringApps, capacityProbe, monApps);
-			//dynamicMonApp.secondApproach(monitoringApps, capacityProbe, monApps);
+			//dynamicMonApp.firstApproach(monitoringApps, capacityProbe, monApps);
+			dynamicMonApp.secondApproach(monitoringApps, capacityProbe, monApps);
 			
 			
 			
