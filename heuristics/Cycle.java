@@ -60,4 +60,11 @@ public boolean hasItem(int item) {
 	return false;
 }
 
+public boolean hasDevice(int dev) { //true if it has the input node/device
+	if(this.nodes.contains(dev)) {
+		return true;
+	}
+	return false;
+}
+
 }
