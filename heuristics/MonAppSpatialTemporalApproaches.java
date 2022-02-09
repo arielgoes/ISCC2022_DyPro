@@ -15,25 +15,29 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.Map.Entry;
 
 
 public class MonAppSpatialTemporalApproaches{
 	public ArrayList<Cycle> cycles;
-	public ArrayList<MonitoringApp> clonedMonApps;
+	public ArrayList<MonitoringApp> monApps;
 	public int[][] costShortestPath;
 	public NetworkInfrastructure infra;
 	long seed;
 	public int capacityProbe;
 	public boolean flagCreatePath = false; //either I let it like this, or return a vector [edge.first, edge.second, flagCreatePath]
 	public boolean flagEqualDepot = false;
+	public int seedChanger; //each time a link is created, we change the seed, incrementing it by 1
 	
 	public MonAppSpatialTemporalApproaches(NetworkInfrastructure infra, long seed, int capacityProbe) {
 		this.cycles = new ArrayList<Cycle>();
 		this.infra = infra;
 		this.costShortestPath = new int[infra.size][infra.size];
 		this.seed = seed;
-		this.clonedMonApps = new ArrayList<MonitoringApp>();
+		this.monApps = new ArrayList<MonitoringApp>();
 		this.capacityProbe = capacityProbe;
+		this.seedChanger = 0;
 		
 		//start shortest path all for all
 		//int count = 0;
@@ -68,31 +72,25 @@ public class MonAppSpatialTemporalApproaches{
 			System.out.println("");
 		}*/
 	}
-
 	
-/*public void cloneMonitoringApps(ArrayList<MonitoringApp> monitoringApps) throws CloneNotSupportedException {
+	
+public ArrayList<MonitoringApp> cloneMonitoringApps(ArrayList<MonitoringApp> monitoringApps) throws CloneNotSupportedException {
+	ArrayList<MonitoringApp> clonedMonApps = new ArrayList<MonitoringApp>();
+
 	for(int i = 0; i < monitoringApps.size(); i++) {
 		MonitoringApp newMonApp = monitoringApps.get(i).clone();
-		this.clonedMonApps.add(newMonApp);
+		clonedMonApps.add(newMonApp);
+		this.monApps.add(newMonApp);
 	}
 	
-}*/
+	return clonedMonApps;
+}
 
 //this approach prioritizes to select the next node to be a "device to be collected". If none, it randomly chooses a next neighbour node to create a cycle
 public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, int capacityProbe) throws CloneNotSupportedException {
+	
 	ArrayList<Cycle> cycles_sol = new ArrayList<Cycle>();
-	System.out.println("before (firstApproach): " + this.clonedMonApps.size());
-	this.clonedMonApps = monitoringApps;
-	System.out.println("after  (firstApproach): " + monitoringApps.size());
-	
-	
-	/*System.out.println("clonedMon: " + clonedMonApps);
-	for(int i = 0; i < clonedMonApps.size(); i++) {
-		System.out.println("mon spatial: " + clonedMonApps.get(i).spatialRequirements);
-		System.out.println("mon dev: " + clonedMonApps.get(i).deviceToBeCollected);
-	}
-	//System.out.println("monApps: " + monApps);
-	System.exit(0);*/
+	this.monApps = monitoringApps;
 	
 	boolean[][] collectedItems = new boolean[this.infra.size][this.infra.telemetryItemsRouter]; //device, item
 	
@@ -106,9 +104,9 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 	
 	// # of remaining items to be collected
 	int remainingItems = 0;
-	for(int i = 0; i < clonedMonApps.size(); i++) {
-		for(int j = 0; j < clonedMonApps.get(i).spatialRequirements.size(); j++) {
-			for(int k = 0; k < clonedMonApps.get(i).spatialRequirements.get(j).size(); k++) {
+	for(int i = 0; i < monApps.size(); i++) {
+		for(int j = 0; j < monApps.get(i).spatialRequirements.size(); j++) {
+			for(int k = 0; k < monApps.get(i).spatialRequirements.get(j).size(); k++) {
 				remainingItems++;
 			}
 		}
@@ -117,7 +115,7 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 	total_items = remainingItems;
 	
 	do {
-		System.out.println("---------------------------------NEW CYCLE-----------------------------------------------------------------");
+		//System.out.println("---------------------------------NEW CYCLE-----------------------------------------------------------------");
 		int currNode = -2;
 		int lastNode = -2;
 		int depot = -2;
@@ -126,9 +124,9 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 		Pair<Integer,Integer> link = Pair.create(currNode, -1);
 		
 		//choose depot
-		if(clonedMonApps.size() > 0) {
-			depot = clonedMonApps.get(0).deviceToBeCollected.get(0);
-			System.out.println("DEPOT... " + depot);
+		if(monApps.size() > 0) {
+			depot = monApps.get(0).deviceToBeCollected.get(0);
+			//System.out.println("DEPOT... " + depot);
 		}else {
 			break;
 		}
@@ -140,44 +138,41 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 		
 		do {
 		
-			//for(int i = 0; i < clonedMonApps.size(); i++) {
-			while(clonedMonApps.size() > 0) {
+			//for(int i = 0; i < monApps.size(); i++) {
+			while(monApps.size() > 0) {
 				int i = 0;
 				
 				//this loop guarantees the current tuples contain at least once the current node to be satisfied
 				boolean flagFoundIt = false;
-				for(i = 0; i < clonedMonApps.size(); i++) {
+				for(i = 0; i < monApps.size(); i++) {
 					//System.out.println("i (in): " + i + ", currNode: " + currNode);
-					if(clonedMonApps.get(i).deviceToBeCollected.contains(currNode)) {
+					if(monApps.get(i).deviceToBeCollected.contains(currNode)) {
 						flagFoundIt = true;
 						break;
 					}
 				}
-				//System.out.println("mon app: " + i + ", cloned size all: " + clonedMonApps.size());
-				
-				
-				
+				//System.out.println("mon app: " + i + ", cloned size all: " + monApps.size());
 				
 				if(flagFoundIt) {
 					//current tuples
-					//System.out.println("curr tuples........................: " + clonedMonApps.get(i).spatialRequirements);
-					//System.out.println("curr devices.......................: " + clonedMonApps.get(i).deviceToBeCollected);
-					while(clonedMonApps.get(i).spatialRequirements.size() > 0) { 
+					//System.out.println("curr tuples........................: " + monApps.get(i).spatialRequirements);
+					//System.out.println("curr devices.......................: " + monApps.get(i).deviceToBeCollected);
+					while(monApps.get(i).spatialRequirements.size() > 0) { 
 						
 						int y = 0;
-						y = clonedMonApps.get(i).deviceToBeCollected.indexOf(currNode);
+						y = monApps.get(i).deviceToBeCollected.indexOf(currNode);
 						if(y < 0) {
 							break;
 						}
 						//System.out.println("who is 'y'...: " + y);
 						
-						int numItemsCurrSpatialDep = clonedMonApps.get(i).spatialRequirements.get(y).size();
+						int numItemsCurrSpatialDep = monApps.get(i).spatialRequirements.get(y).size();
 						ArrayList<Integer> auxRemoveCurrTuple = new ArrayList<Integer>();
 						
 						
 						//current tuple 
-						for(int l = 0; l < clonedMonApps.get(i).spatialRequirements.get(y).size(); l++) {
-							item = clonedMonApps.get(i).spatialRequirements.get(y).get(l);
+						for(int l = 0; l < monApps.get(i).spatialRequirements.get(y).size(); l++) {
+							item = monApps.get(i).spatialRequirements.get(y).get(l);
 							//System.out.println("item (out): " + item);
 							
 							if(collectedItems[currNode][item]) {
@@ -216,33 +211,31 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 						//System.out.println("remainingItems: " + remainingItems);
 						
 						//remove collected items
-						
-						
+
 						for(int x = 0; x < auxRemoveCurrTuple.size(); x++) {
-							if(clonedMonApps.get(i).spatialRequirements.get(y).contains(auxRemoveCurrTuple.get(x))) {
+							if(monApps.get(i).spatialRequirements.get(y).contains(auxRemoveCurrTuple.get(x))) {
 								//System.out.println("items to be removed array (if): " + auxRemoveCurrTuple.get(x));
-								clonedMonApps.get(i).spatialRequirements.get(y).remove(auxRemoveCurrTuple.get(x));
+								monApps.get(i).spatialRequirements.get(y).remove(auxRemoveCurrTuple.get(x));
 							}
 						}
-						
-						
+
 						
 						//System.out.println("numItemsCurrSpatialDep: " + numItemsCurrSpatialDep);
-						//System.out.println("cloned spatial req: (before) " + clonedMonApps.get(i).spatialRequirements);
-						//System.out.println("cloned dev req      (before): " + clonedMonApps.get(i).deviceToBeCollected);
+						//System.out.println("cloned spatial req: (before) " + monApps.get(i).spatialRequirements);
+						//System.out.println("cloned dev req      (before): " + monApps.get(i).deviceToBeCollected);
 						if(numItemsCurrSpatialDep == 0) { // e.g., before: Mon 0: < <2,3>, <4,5> > || after: Mon 0: < <4,5> >
-							clonedMonApps.get(i).spatialRequirements.remove(y);
-							clonedMonApps.get(i).deviceToBeCollected.remove(y);						
+							monApps.get(i).spatialRequirements.remove(y);
+							monApps.get(i).deviceToBeCollected.remove(y);						
 						}
-						//System.out.println("cloned spatial req (after): " + clonedMonApps.get(i).spatialRequirements);
-						//System.out.println("cloned dev req     (after): " + clonedMonApps.get(i).deviceToBeCollected);
+						//System.out.println("cloned spatial req (after): " + monApps.get(i).spatialRequirements);
+						//System.out.println("cloned dev req     (after): " + monApps.get(i).deviceToBeCollected);
 	
 						
 						//Choose the next node - i.e., create a cycle link
-						if(clonedMonApps.get(i).deviceToBeCollected.contains(currNode)) {
+						if(monApps.get(i).deviceToBeCollected.contains(currNode)) {
 							continue;
 						}else {
-							link = generateLink(depot, currNode, lastNode, currProbeCapacity, fixedEdgeCost, visited, clonedMonApps.get(i).deviceToBeCollected);	
+							link = generateLink(depot, currNode, lastNode, currProbeCapacity, fixedEdgeCost, visited, monApps.get(i).deviceToBeCollected);	
 						}
 						
 						if(link.second == -99) { //no more edges to visit. So, return to the depot
@@ -260,11 +253,11 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 						
 					}
 				
-					//System.out.println("cloned spatial req (outer): " + clonedMonApps.get(i).spatialRequirements);
-					if(clonedMonApps.get(i).spatialRequirements.size() == 0) {
+					//System.out.println("cloned spatial req (outer): " + monApps.get(i).spatialRequirements);
+					if(monApps.get(i).spatialRequirements.size() == 0) {
 						//flagReturnDepot = true;
 						//System.out.println("currNode (if below): " + currNode);
-						clonedMonApps.remove(i);
+						monApps.remove(i);
 						continue;
 					}
 					
@@ -296,8 +289,8 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 				
 			}
 		
-		 //System.out.println("clonedMonApps: " + clonedMonApps);
-		}while(clonedMonApps.size() > 0 && currProbeCapacity > capacityProbe/2 && !flagReturnDepot); //upforward steps
+		 //System.out.println("monApps: " + monApps);
+		}while(monApps.size() > 0 && currProbeCapacity > capacityProbe/2 && !flagReturnDepot); //upforward steps
 		//do-while - backwards steps - i.e., connecting the cycle towards the 'depot'
 		
 		//reset flag
@@ -347,11 +340,23 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 		//c.printCycleWithCapacity();
 		currProbeCapacity = oldProbeCapacity; //reset probe capacity
 	
-	}while(this.clonedMonApps.size() > 0 || remainingItems > 0);
+	}while(this.monApps.size() > 0 || remainingItems > 0);
+
 	
-	System.out.println("cloned size: " + clonedMonApps.size());
-	System.out.println("original size: " + monitoringApps.size());
-	cycles_sol = simpleOptimizer(cycles_sol); //OPTIMIZER (REDUCE # OF CYCLES)
+	for(int i = cycles_sol.size() - 1; i >= 0 ; --i) {
+		if(cycles_sol.get(i).itemPerCycle.isEmpty()) {
+			cycles_sol.remove(i);
+		}
+	}
+	
+	System.out.println("cycles size (before simpleOptimizer): " + cycles_sol.size());
+	//cycles_sol = simpleOptimizer(cycles_sol); //OPTIMIZER (REDUCE # OF CYCLES)	
+	
+	System.out.println("cycles size (after simpleOptimizer): " + cycles_sol.size());
+	//print cycles
+	/*for(int i = 0; i < cycles_sol.size(); i++) {
+		cycles_sol.get(i).printCycleWithCapacity();	
+	}*/
 
 	
 	return cycles_sol;
@@ -361,6 +366,15 @@ public ArrayList<Cycle> firstApproach(ArrayList<MonitoringApp> monitoringApps, i
 //reduces the number of cycles in the current solution
 public ArrayList<Cycle> simpleOptimizer(ArrayList<Cycle> cycles_sol) {
 	System.out.println("-----------------------SIMPLE OPTIMIZER-----------------------");
+	
+	//remove useless cycles - i.e., not collecting items
+	/*for(int i = cycles_sol.size() - 1; i >= 0 ; --i) {
+		if(cycles_sol.get(i).itemPerCycle.isEmpty()) {
+			cycles_sol.remove(i);
+		}
+	}*/
+	
+	
 	int indexHighest = 0;
 	int highestCapUsed = Integer.MIN_VALUE; 
 	ArrayList<Cycle> cyclesToBeRemoved = new ArrayList<Cycle>();
@@ -380,17 +394,17 @@ public ArrayList<Cycle> simpleOptimizer(ArrayList<Cycle> cycles_sol) {
 				Tuple devItem = cycles_sol.get(i).itemPerCycle.get(j); 
 				
 				//check the existing links and available space (resilient capacity) and remove items from the least utilized cycle
-				if(cycles_sol.get(indexHighest).nodes.contains(devItem.getDevice())) {
+				if(cycles_sol.get(indexHighest).nodes.contains(devItem.getFirst())) {
 					int resilientCap = cycles_sol.get(indexHighest).capacity - cycles_sol.get(indexHighest).capacity_used;
 					//System.out.println("resilientCap: " + resilientCap);
-					if(resilientCap - infra.sizeTelemetryItems[devItem.getItem()] >= 0) {
+					if(resilientCap - infra.sizeTelemetryItems[devItem.getSecond()] >= 0) {
 						//most utilized cycle
 						cycles_sol.get(indexHighest).itemPerCycle.add(devItem); //add item
-						cycles_sol.get(indexHighest).capacity_used += infra.sizeTelemetryItems[devItem.getItem()]; //update capacity
+						cycles_sol.get(indexHighest).capacity_used += infra.sizeTelemetryItems[devItem.getSecond()]; //update capacity
 						
 						//least utilized cycle
 						itemsToBeRemoved.add(devItem); //remove item (later)
-						cycles_sol.get(i).capacity_used -= infra.sizeTelemetryItems[devItem.getItem()]; //update capacity
+						cycles_sol.get(i).capacity_used -= infra.sizeTelemetryItems[devItem.getSecond()]; //update capacity
 					}
 				}
 			}
@@ -412,7 +426,11 @@ public ArrayList<Cycle> simpleOptimizer(ArrayList<Cycle> cycles_sol) {
 		}
 	}
 	
-	//maybe it should be necessary to update probe id before returning it... idk yet...
+	//update probe id
+	for(int i = 0; i < cycles_sol.size(); i++) {
+		cycles_sol.get(i).cycle_id = i;
+	}
+	
 	return cycles_sol;
 }
 
@@ -421,7 +439,8 @@ public Pair<Integer,Integer> generateLink(int depot, int node1, int lastNode, in
 		boolean[][] visited, ArrayList<Integer> deviceToBeCollected) {
 	
 	Pair<Integer,Integer> edge = Pair.create(node1, -99);
-	Random rnd = new Random(this.seed);
+	Random rnd = new Random(this.seed + this.seedChanger);
+	this.seedChanger++;
 	ArrayList<Integer> neighboursList = new ArrayList<Integer>();
 	
 	//search for neighbours... avoid loop on random node selection
@@ -464,182 +483,6 @@ public Pair<Integer,Integer> generateLink(int depot, int node1, int lastNode, in
 }
 
 
-//this method takes a new set of random monitoring apps and try to reconstruct probe cycles from previous mon app attributions (e.g., using 'firstApproach')
-public void dynamicMonAppProbeGenerator(ArrayList<MonitoringApp> newMonApps) throws CloneNotSupportedException {
-	
-	this.clonedMonApps = newMonApps;
-	
-	ArrayList<int[]> satisfiedTuples = new ArrayList<int[]>();
-	boolean[][] collected = new boolean[this.infra.size][this.infra.telemetryItemsRouter];
-	
-	//Check what spatial requirements are already satisfied by the previous probe scheme
-	for(int i = this.cycles.size() - 1; i >= 0; --i){
-		for(int j = this.cycles.get(i).itemPerCycle.size() - 1; j >= 0; --j) {
-			Tuple devItem = this.cycles.get(i).itemPerCycle.get(j);
-			//System.out.println("devItem: " + devItem);
-			
-			boolean monAppContainsDevItem = false; 
-			//iterate over all mon apps and delete all spatial requirements containing the exactly same tuple (dev, item)
-			for(int a = 0; a < this.clonedMonApps.size(); a++) {
-				for(int b = 0; b < this.clonedMonApps.get(a).spatialRequirements.size(); b++) {
-					for(int c = 0; c < this.clonedMonApps.get(a).spatialRequirements.get(b).size(); c++) {							
-						//System.out.println("a: " + a + ", b: " + b + ", c: " + c);
-						if(this.clonedMonApps.get(a).deviceToBeCollected.get(b) == devItem.getDevice() &&
-								this.clonedMonApps.get(a).spatialRequirements.get(b).get(c) == devItem.getItem()) {
-							//System.out.println("devItem: " + devItem);
-							//System.out.println("a: " + a + ", b: " + b + ", c: " + c);
-							int[] aux = new int[3]; // int[0]: mon app id, int[1]: spatial req id, int[2]: item position
-							aux[0] = a;
-							aux[1] = b;
-							aux[2] = c;
-							satisfiedTuples.add(aux);
-							collected[devItem.getDevice()][devItem.getItem()] = true; //mark as already collected (i.e., by previous probe)
-						}else if(this.clonedMonApps.get(a).deviceToBeCollected.contains(devItem.getDevice()) &&
-								 	this.clonedMonApps.get(a).spatialRequirements.get(b).contains(devItem.getItem())){ 
-							monAppContainsDevItem = true;
-							//this.cycles.get(i).itemPerCycle.remove(devItem);
-						}
-					}
-				}
-			}
-			
-			//delete non-utilized spatial requirements collected from the previous solution and decrease 'capacity_used'
-			if(!monAppContainsDevItem) {
-				this.cycles.get(i).capacity_used -= infra.sizeTelemetryItems[devItem.getItem()];
-				this.cycles.get(i).itemPerCycle.remove(devItem);
-			}
-		}
-	}
-	
-	//set collected items to '-1'
-	for(int i = 0; i < satisfiedTuples.size(); i++) {
-		int monAppId = satisfiedTuples.get(i)[0];
-		int spatialReqId = satisfiedTuples.get(i)[1];
-		int itemId = satisfiedTuples.get(i)[2];
-		//System.out.println("monAppId: " + monAppId + ", spatialReqId: " + spatialReqId + ", itemId: " + itemId);
-		
-		//mark items as '-1' to be removed later (i.e., in order to not lose the stored indexes - 'aux' array)
-		for(int a = 0; a < this.clonedMonApps.size(); a++) {
-			for(int b = 0; b < this.clonedMonApps.get(a).spatialRequirements.size(); b++) {
-				for(int c = 0; c < this.clonedMonApps.get(a).spatialRequirements.get(b).size(); c++) {
-					if(a == monAppId && b == spatialReqId && c == itemId) {
-						this.clonedMonApps.get(a).spatialRequirements.get(b).set(c, -1);
-					}
-				}
-				boolean allCollected = true;
-				for(int x = 0; x < this.clonedMonApps.get(a).spatialRequirements.get(b).size(); x++) {
-					if(this.clonedMonApps.get(a).spatialRequirements.get(b).get(x) != -1) {
-						allCollected = false;
-					}
-				}
-				if(a == monAppId && b == spatialReqId && allCollected) {
-					this.clonedMonApps.get(a).deviceToBeCollected.set(b, -1);
-				}
-			}
-		}
-	}
-	
-
-	//remove marked items (i.e., '-1' items)
-	for(int i = 0; i < satisfiedTuples.size(); i++) {
-		int monAppId = satisfiedTuples.get(i)[0];
-		int spatialReqId = satisfiedTuples.get(i)[1];
-		//int itemId = satisfiedTuples.get(i)[2];
-		
-		//remove items
-		for(int a = 0; a < this.clonedMonApps.size(); a++) {
-			for(int b = 0; b < this.clonedMonApps.get(a).spatialRequirements.size(); b++) {
-				for(int c = 0; c < this.clonedMonApps.get(a).spatialRequirements.get(b).size(); c++) {
-					int itemIndex = this.clonedMonApps.get(a).spatialRequirements.get(b).indexOf(-1);					
-					if(a == monAppId && b == spatialReqId && itemIndex != -1) { //itemIndex != -1 -> it means there is a valid index where the item was set to '-1'
-						//System.out.println("a: " + a + ", b: " + b + ", itemIndex: " + itemIndex);
-						this.clonedMonApps.get(a).spatialRequirements.get(b).remove(itemIndex);
-					}
-				}
-			}
-		}
-	}
-	
-	//remove empty tuples and empty mon apps (if any) - iterating it backwards allows me to remove and iterate simultaneously
-	for(int i = this.clonedMonApps.size() - 1; i >= 0; --i) {
-		for(int j = this.clonedMonApps.get(i).spatialRequirements.size() - 1; j >= 0; --j) {
-			if(this.clonedMonApps.get(i).spatialRequirements.get(j).isEmpty()) {
-				//System.out.println("i: " + i + ", j: " + j);
-				this.clonedMonApps.get(i).spatialRequirements.remove(j);
-				this.clonedMonApps.get(i).deviceToBeCollected.remove(j);
-			}
-		}
-		//then, remove empty mon apps (if any) - i.e., mon apps where all spatial requirements are already satisfied
-		if(this.clonedMonApps.get(i).spatialRequirements.isEmpty()) {
-			this.clonedMonApps.remove(i);
-		}
-	}
-	
-	
-	//try to insert unsatisfied tuple-items into the existing probe paths
-	/*for(int i = this.clonedMonApps.size() - 1; i >= 0; --i) {
-		for(int j = this.clonedMonApps.get(i).spatialRequirements.size() - 1; j >= 0; --j) {
-			for(int k = this.clonedMonApps.get(i).spatialRequirements.get(j).size() - 1; k >= 0; --k) {
-				int dev = this.clonedMonApps.get(i).deviceToBeCollected.get(j);
-				int item = this.clonedMonApps.get(i).spatialRequirements.get(j).get(k);
-				
-				//iterate cycles
-				for(int a = this.cycles.size() - 1; a >= 0; --a) {
-					//if the path contains the node/device and has enough space, collect it and mark it as collected
-					if(this.cycles.get(a).hasDevice(dev) &&  
-							this.cycles.get(a).capacity_used + infra.sizeTelemetryItems[item] <= this.cycles.get(a).capacity) {
-						
-						Tuple devItem = new Tuple(dev, item);
-		
-						if(!this.cycles.get(a).itemPerCycle.contains(devItem) && !collected[devItem.getDevice()][devItem.getItem()]) {
-							this.cycles.get(a).itemPerCycle.add(devItem);
-							this.cycles.get(a).capacity_used += infra.sizeTelemetryItems[item];
-							collected[devItem.getDevice()][devItem.getItem()] = true;
-						}
-						this.clonedMonApps.get(i).spatialRequirements.get(j).remove(k); //remove item
-					}
-				}
-			}
-			if(this.clonedMonApps.get(i).spatialRequirements.get(j).isEmpty()) { //satisfy the spatial requirement -- i.e., delete it from mon app
-				this.clonedMonApps.get(i).spatialRequirements.remove(j);
-				this.clonedMonApps.get(i).deviceToBeCollected.remove(j);
-			}
-		}
-		if(this.clonedMonApps.get(i).spatialRequirements.isEmpty()) {
-			this.clonedMonApps.remove(i);
-		}
-	}*/
- 
-	//NOTE: Check if all items are being collected correctly
-	/*for(int i = this.clonedMonApps.size() - 1; i >= 0; --i) {
-		for(int j = this.clonedMonApps.get(i).spatialRequirements.size() - 1; j >= 0; --j) {
-			for(int k = this.clonedMonApps.get(i).spatialRequirements.get(j).size() - 1; k >= 0; --k) {
-				System.out.println("this item must be collected!");
-			}
-		}
-	}*/
-	
-	//Create new probe paths if necessary 
-	//NOTE2: Comment the for-group above to simulate a scenario where there are remaining items to be collected
-	
-	//this method return a arraylist of cycles. I must add these cycles to my solution
-	ArrayList<Cycle> tempCycles = new ArrayList<Cycle>();
-	tempCycles = firstApproach(this.clonedMonApps, this.capacityProbe);
-	for(Cycle c: tempCycles) {
-		this.cycles.add(c);
-	}
-	
-
-	//post processing
-	System.out.println("cycles size (after dynMon): " + this.cycles.size());
-	for(int i = 0; i < this.cycles.size(); i++) {
-		this.cycles.get(i).printCycleWithCapacity();	
-	}
-	
-	
-}
-
-
 //(NOT WORKING CORRECTLY YET)
 //NOTE: Need to check all changes made on firstApproach and apply it here
 //this approach always creates the shortest path to the next spatial requirement node to create cycles 
@@ -647,7 +490,7 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 	ArrayList<Cycle> cycles_sol = new ArrayList<Cycle>();
 	//ArrayList<ArrayList<Integer>> auxSpatialRequirements = ArrayList<ArrayList<Integer>> 
 	
-	this.clonedMonApps = monitoringApps;
+	this.monApps = monitoringApps;
 	
 	boolean[][] collectedItems = new boolean[this.infra.size][this.infra.telemetryItemsRouter]; //device, item
 	
@@ -661,9 +504,9 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 	
 	// # of remaining items to be collected
 	int remainingItems = 0;
-	for(int i = 0; i < clonedMonApps.size(); i++) {
-		for(int j = 0; j < clonedMonApps.get(i).spatialRequirements.size(); j++) {
-			for(int k = 0; k < clonedMonApps.get(i).spatialRequirements.get(j).size(); k++) {
+	for(int i = 0; i < monApps.size(); i++) {
+		for(int j = 0; j < monApps.get(i).spatialRequirements.size(); j++) {
+			for(int k = 0; k < monApps.get(i).spatialRequirements.get(j).size(); k++) {
 				remainingItems++;
 			}
 		}
@@ -688,8 +531,8 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 		Pair<Integer,Integer> link = Pair.create(currNode, -1);
 		
 		//choose depot
-		if(clonedMonApps.size() > 0) {
-			depot = clonedMonApps.get(0).deviceToBeCollected.get(0);
+		if(monApps.size() > 0) {
+			depot = monApps.get(0).deviceToBeCollected.get(0);
 			//System.out.println("DEPOT... " + depot);
 		}else {
 			break;
@@ -702,30 +545,30 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 		
 		do {
 		
-			//for(int i = 0; i < clonedMonApps.size(); i++) {
-			while(clonedMonApps.size() > 0) {
+			//for(int i = 0; i < monApps.size(); i++) {
+			while(monApps.size() > 0) {
 				int i = 0;
-				System.out.println("curr tuples........................: " + clonedMonApps.get(i).spatialRequirements);
+				System.out.println("curr tuples........................: " + monApps.get(i).spatialRequirements);
 				//iterate over all sets of spatial requirements
-				while(clonedMonApps.get(i).spatialRequirements.size() > 0) {
+				while(monApps.get(i).spatialRequirements.size() > 0) {
 					
 					//System.out.println("currNode.........: " + currNode);
-					//for(int k = 0; k < clonedMonApps.get(i).spatialRequirements.size(); k++) { //iterate over mon apps' spatial requirements (item tuples)
-					//System.out.println("curr dev.................: " + clonedMonApps.get(i).deviceToBeCollected.get(k));
+					//for(int k = 0; k < monApps.get(i).spatialRequirements.size(); k++) { //iterate over mon apps' spatial requirements (item tuples)
+					//System.out.println("curr dev.................: " + monApps.get(i).deviceToBeCollected.get(k));
 					//System.out.println("probe capacity: " + currProbeCapacity);
 					//System.out.println("remainingItems: " + remainingItems);
-					//System.out.println("cloned size: " + clonedMonApps.size());
+					//System.out.println("cloned size: " + monApps.size());
 					
 					
-					//int numItemsCurrSpatialDep = clonedMonApps.get(i).spatialRequirements.get(k).size();
-					int numItemsCurrSpatialDep = clonedMonApps.get(i).spatialRequirements.get(0).size();
+					//int numItemsCurrSpatialDep = monApps.get(i).spatialRequirements.get(k).size();
+					int numItemsCurrSpatialDep = monApps.get(i).spatialRequirements.get(0).size();
 					//System.out.println("num item curr spatial dep comecooo: " + numItemsCurrSpatialDep);
 					ArrayList<Integer> auxRemoveCurrTuple = new ArrayList<Integer>();
 					//System.out.println("numItemsSpatialDep: " + numItemsCurrSpatialDep);
 					
 					//current tuple 
-					for(int l = 0; l < clonedMonApps.get(i).spatialRequirements.get(0).size(); l++) {
-						item = clonedMonApps.get(i).spatialRequirements.get(0).get(l);
+					for(int l = 0; l < monApps.get(i).spatialRequirements.get(0).size(); l++) {
+						item = monApps.get(i).spatialRequirements.get(0).get(l);
 						//System.out.println("item (out): " + item);
 						//add items to probe - if it has enough available space
 						
@@ -758,26 +601,26 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 					//System.out.println("auxRemoveCurrTuple: " + auxRemoveCurrTuple);
 					//remove collected items
 					/*for(int x = 0; x < auxRemoveCurrTuple.size(); x++) {
-						if(clonedMonApps.get(i).spatialRequirements.get(0).contains(auxRemoveCurrTuple.get(x))) {
-							clonedMonApps.get(i).spatialRequirements.get(0).remove(auxRemoveCurrTuple.get(x));
+						if(monApps.get(i).spatialRequirements.get(0).contains(auxRemoveCurrTuple.get(x))) {
+							monApps.get(i).spatialRequirements.get(0).remove(auxRemoveCurrTuple.get(x));
 						}
 					}*/
 					
 					//System.out.println("numitemscurrspatialdep: " + numItemsCurrSpatialDep);
 					//System.out.println("num items curr spatial dep asdjhasdjhaskjdhasd: " + numItemsCurrSpatialDep);
-					//System.out.println("cloned spatial req: (before) " + clonedMonApps.get(i).spatialRequirements);
-					//System.out.println("cloned dev req      (before): " + clonedMonApps.get(i).deviceToBeCollected);
+					//System.out.println("cloned spatial req: (before) " + monApps.get(i).spatialRequirements);
+					//System.out.println("cloned dev req      (before): " + monApps.get(i).deviceToBeCollected);
 					if(numItemsCurrSpatialDep == 0) { // e.g., before: Mon 0: < <2,3>, <4,5> > || after: Mon 0: < <4,5> >
-						clonedMonApps.get(i).spatialRequirements.remove(0);
-						clonedMonApps.get(i).deviceToBeCollected.remove(0);	
+						monApps.get(i).spatialRequirements.remove(0);
+						monApps.get(i).deviceToBeCollected.remove(0);	
 					}
-					//System.out.println("cloned spatial req (after): " + clonedMonApps.get(i).spatialRequirements);
-					//System.out.println("cloned dev req     (after): " + clonedMonApps.get(i).deviceToBeCollected);
+					//System.out.println("cloned spatial req (after): " + monApps.get(i).spatialRequirements);
+					//System.out.println("cloned dev req     (after): " + monApps.get(i).deviceToBeCollected);
 
 					
 					//Choose the next node - i.e., create a cycle link
 					flagCreatePath = false;
-					link = generateLink2(depot, currNode, lastNode, currProbeCapacity, fixedEdgeCost, visited, clonedMonApps.get(i).deviceToBeCollected, clonedMonApps); 
+					link = generateLink2(depot, currNode, lastNode, currProbeCapacity, fixedEdgeCost, visited, monApps.get(i).deviceToBeCollected, monApps); 
 					//System.out.println("link: " + link);
 					if(link.second == -99) { //no more edges to visit. So, return to the depot
 						//System.out.println("flag to return = TRUE");
@@ -832,10 +675,10 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 				}
 				
 				
-				//System.out.println("cloned spatial req (outer): " + clonedMonApps.get(i).spatialRequirements);
-				if(clonedMonApps.get(i).spatialRequirements.size() == 0) {
+				//System.out.println("cloned spatial req (outer): " + monApps.get(i).spatialRequirements);
+				if(monApps.get(i).spatialRequirements.size() == 0) {
 					flagReturnDepot = true;
-					clonedMonApps.remove(i);
+					monApps.remove(i);
 				}
 				
 				if(flagReturnDepot) {
@@ -845,8 +688,8 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 				
 			}
 		
-		 //System.out.println("clonedMonApps: " + clonedMonApps);
-		}while(clonedMonApps.size() > 0 && currProbeCapacity > capacityProbe/2 && !flagReturnDepot); //upforward steps
+		 //System.out.println("monApps: " + monApps);
+		}while(monApps.size() > 0 && currProbeCapacity > capacityProbe/2 && !flagReturnDepot); //upforward steps
 		//do-while - backwards steps - i.e., connecting the cycle towards the 'depot'
 		
 		//reset flagReturnDepot
@@ -870,7 +713,7 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 				shortPath = infra.getShortestPath(link.first, depot);
 			}
 			//System.out.println("shortPath (outer): " + shortPath);
-			//clonedMonApps.get(0).printMonitoringApps(clonedMonApps);
+			//monApps.get(0).printMonitoringApps(monApps);
 			
 			for(int k = 0; k < shortPath.size() - 1; k++) {
 				int node1 = shortPath.get(k);
@@ -892,24 +735,24 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 						
 				int indexNode1 = -1;
 				int indexNode2 = -1;
-				for(r = 0; r < clonedMonApps.size(); r++) {
-					System.out.println("devices1: " + clonedMonApps.get(r).deviceToBeCollected);
-					indexNode1 = clonedMonApps.get(r).deviceToBeCollected.indexOf(node1); // -1, if not found / index #, if found
+				for(r = 0; r < monApps.size(); r++) {
+					System.out.println("devices1: " + monApps.get(r).deviceToBeCollected);
+					indexNode1 = monApps.get(r).deviceToBeCollected.indexOf(node1); // -1, if not found / index #, if found
 					System.out.println("node1: " + node1);
 					System.out.println("indexNode1: " + indexNode1);
 					break;
 				}
 				
-				if(r == clonedMonApps.size()) {
+				if(r == monApps.size()) {
 					r = r - 1;	
 				}
 				
 				//check node1
 				if(indexNode1 != -1) {
-					int nodeAux = clonedMonApps.get(r).deviceToBeCollected.get(indexNode1);
-					int spatialDepCurr = clonedMonApps.get(r).deviceToBeCollected.size();
-					for(int s = 0; s < clonedMonApps.get(r).spatialRequirements.get(indexNode1).size(); s++) {
-						item = clonedMonApps.get(r).spatialRequirements.get(indexNode1).get(s);
+					int nodeAux = monApps.get(r).deviceToBeCollected.get(indexNode1);
+					int spatialDepCurr = monApps.get(r).deviceToBeCollected.size();
+					for(int s = 0; s < monApps.get(r).spatialRequirements.get(indexNode1).size(); s++) {
+						item = monApps.get(r).spatialRequirements.get(indexNode1).get(s);
 						
 						if(collectedItems[nodeAux][item]) {
 							//items to be removed
@@ -934,43 +777,43 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 							
 							//items to be removed
 							auxRemoveCurrTuple.add(item);
-							//clonedMonApps.get(i).spatialRequirements.get(k).remove(l);
+							//monApps.get(i).spatialRequirements.get(k).remove(l);
 						}
 					}
 					
 					//remove collected items
 					for(int x = 0; x < auxRemoveCurrTuple.size(); x++) {
-						if(clonedMonApps.get(r).spatialRequirements.get(indexNode1).contains(auxRemoveCurrTuple.get(x))) {
-							clonedMonApps.get(r).spatialRequirements.get(indexNode1).remove(auxRemoveCurrTuple.get(x));
+						if(monApps.get(r).spatialRequirements.get(indexNode1).contains(auxRemoveCurrTuple.get(x))) {
+							monApps.get(r).spatialRequirements.get(indexNode1).remove(auxRemoveCurrTuple.get(x));
 						}
 					}
 					
 					if(spatialDepCurr == 0) { // e.g., before: Mon 0: < <2,3>, <4,5> > || after: Mon 0: < <4,5> >
-						clonedMonApps.get(r).spatialRequirements.remove(indexNode1);
-						clonedMonApps.get(r).deviceToBeCollected.remove(indexNode1);						
+						monApps.get(r).spatialRequirements.remove(indexNode1);
+						monApps.get(r).deviceToBeCollected.remove(indexNode1);						
 					}
 					
 				}
 				
 				auxRemoveCurrTuple = new ArrayList<Integer>();
 				
-				for(r = 0; r < clonedMonApps.size(); r++) {
-					System.out.println("devices2: " + clonedMonApps.get(r).deviceToBeCollected);
-					indexNode2 = clonedMonApps.get(r).deviceToBeCollected.indexOf(node2); // -1, if not found / index #, if found
+				for(r = 0; r < monApps.size(); r++) {
+					System.out.println("devices2: " + monApps.get(r).deviceToBeCollected);
+					indexNode2 = monApps.get(r).deviceToBeCollected.indexOf(node2); // -1, if not found / index #, if found
 					System.out.println("node2: " + node2);
 					System.out.println("indexNode2: " + indexNode1);
 					break;
 				}
 				
-				if(r == clonedMonApps.size()) {
+				if(r == monApps.size()) {
 					r = r - 1;	
 				}
 				
 				if(indexNode2 != -1) { //check node2
-					int nodeAux = clonedMonApps.get(r).deviceToBeCollected.get(indexNode2);
-					int spatialDepCurr = clonedMonApps.get(r).deviceToBeCollected.size();
-					for(int s = 0; s < clonedMonApps.get(r).spatialRequirements.get(indexNode2).size(); s++) {
-						item = clonedMonApps.get(r).spatialRequirements.get(indexNode2).get(s);
+					int nodeAux = monApps.get(r).deviceToBeCollected.get(indexNode2);
+					int spatialDepCurr = monApps.get(r).deviceToBeCollected.size();
+					for(int s = 0; s < monApps.get(r).spatialRequirements.get(indexNode2).size(); s++) {
+						item = monApps.get(r).spatialRequirements.get(indexNode2).get(s);
 						
 						if(collectedItems[nodeAux][item]) {
 							//items to be removed
@@ -995,20 +838,20 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 							
 							//items to be removed
 							auxRemoveCurrTuple.add(item);
-							//clonedMonApps.get(i).spatialRequirements.get(k).remove(l);
+							//monApps.get(i).spatialRequirements.get(k).remove(l);
 						}
 					}
 					
 					//remove collected items
 					for(int x = 0; x < auxRemoveCurrTuple.size(); x++) {
-						if(clonedMonApps.get(r).spatialRequirements.get(indexNode2).contains(auxRemoveCurrTuple.get(x))) {
-							clonedMonApps.get(r).spatialRequirements.get(indexNode2).remove(auxRemoveCurrTuple.get(x));
+						if(monApps.get(r).spatialRequirements.get(indexNode2).contains(auxRemoveCurrTuple.get(x))) {
+							monApps.get(r).spatialRequirements.get(indexNode2).remove(auxRemoveCurrTuple.get(x));
 						}
 					}
 					
 					if(spatialDepCurr == 0) { // e.g., before: Mon 0: < <2,3>, <4,5> > || after: Mon 0: < <4,5> >
-						clonedMonApps.get(r).spatialRequirements.remove(indexNode2);
-						clonedMonApps.get(r).deviceToBeCollected.remove(indexNode2);						
+						monApps.get(r).spatialRequirements.remove(indexNode2);
+						monApps.get(r).deviceToBeCollected.remove(indexNode2);						
 					}
 					
 				}else {
@@ -1026,7 +869,7 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 		c.printCycleWithCapacity();
 		currProbeCapacity = oldProbeCapacity; //reset probe capacity
 	
-	}while(clonedMonApps.size() > 0 && remainingItems > 0); //NOTE: THIS APPROACH IS GENERATING CYCLES OF SIZE ONE!!
+	}while(monApps.size() > 0 && remainingItems > 0); //NOTE: THIS APPROACH IS GENERATING CYCLES OF SIZE ONE!!
 
 	
 	//count collected items
@@ -1040,7 +883,7 @@ public ArrayList<Cycle> secondApproach(ArrayList<MonitoringApp> monitoringApps, 
 
 
 public Pair<Integer,Integer> generateLink2(int depot, int node1, int lastNode, int currProbeCapacity, int fixedEdgeCost,
-		boolean[][] visited, ArrayList<Integer> deviceToBeCollected, ArrayList<MonitoringApp> clonedMonApps) {
+		boolean[][] visited, ArrayList<Integer> deviceToBeCollected, ArrayList<MonitoringApp> monApps) {
 	
 
 	Pair<Integer,Integer> edge = Pair.create(node1, -99);
@@ -1127,7 +970,562 @@ public ArrayList<Cycle> addNodesToCycle(ArrayList<Cycle> cycles_sol) {
 	return cycles_sol;
 }
 
+
+
+public void dynamicMonAppProbeGeneratorRestrict(ArrayList<MonitoringApp> newMonApps, int numMaxSpatialDependencies, int maxSizeSpatialDependency) throws CloneNotSupportedException {
 	
+	this.monApps = newMonApps;
+	
+	ArrayList<int[]> satisfiedTuples = new ArrayList<int[]>();
+	
+	//int[0]: mon app id, int[1]: dev id (spatial req id), int[2]: item position
+	boolean[][][] collected = new boolean[this.monApps.size()][numMaxSpatialDependencies-1][maxSizeSpatialDependency]; 
+	
+	//Check what spatial requirements are already satisfied by the previous probe scheme
+	for(int i = this.cycles.size() - 1; i >= 0; --i){
+		for(int j = this.cycles.get(i).itemPerCycle.size() - 1; j >= 0; --j) {
+			Tuple devItem = this.cycles.get(i).itemPerCycle.get(j);
+			//System.out.println("devItem: " + devItem);
+			
+			//iterate over all mon apps and delete all spatial requirements containing the exactly same tuple (dev, item)
+			for(int a = 0; a < this.monApps.size(); a++) {
+				for(int b = 0; b < this.monApps.get(a).spatialRequirements.size(); b++) {
+					for(int c = 0; c < this.monApps.get(a).spatialRequirements.get(b).size(); c++) {							
+						//System.out.println("a: " + a + ", b: " + b + ", c: " + c);
+						if(this.monApps.get(a).deviceToBeCollected.get(b) == devItem.getFirst() &&
+								this.monApps.get(a).spatialRequirements.get(b).get(c) == devItem.getSecond()) {
+							//System.out.println("devItem: " + devItem);
+							//System.out.println("a: " + a + ", b: " + b + ", c: " + c);
+							int[] aux = new int[3]; // int[0]: mon app id, int[1]: spatial req id, int[2]: item position
+							aux[0] = a;
+							aux[1] = b;
+							aux[2] = c;
+							satisfiedTuples.add(aux);
+							collected[a][b][c] = true; //if the items is found in the cycle, mark it as already satisfied
+						}
+					}		
+				}
+			}
+		}
+	}
+	
+	
+	//remove items collected for previous mon apps NOT included in the current ones
+	for(int i = this.cycles.size() - 1; i >= 0; --i){
+		for(int j = this.cycles.get(i).itemPerCycle.size() - 1; j >= 0; --j) {
+			Tuple devItem = this.cycles.get(i).itemPerCycle.get(j);
+			
+			boolean monAppHasItem = false;
+			for(int a = 0; a < this.monApps.size(); a++) {
+				for(int b = 0; b < this.monApps.get(a).spatialRequirements.size(); b++) {
+					for(int c = 0; c < this.monApps.get(a).spatialRequirements.get(b).size(); c++) {
+						if(this.monApps.get(a).deviceToBeCollected.get(b) == devItem.getFirst() &&
+								this.monApps.get(a).spatialRequirements.get(b).get(c) == devItem.getSecond()) {
+							monAppHasItem = true;
+							break;
+						}
+					}
+				}
+			}
+			if(!monAppHasItem) {
+				for(int x = this.cycles.size() - 1; x >= 0; --x) {
+					
+					if(this.cycles.get(x).itemPerCycle.contains(devItem)) {
+						if(this.cycles.get(x).itemPerCycle.remove(devItem)) {
+							//System.out.println("devItem removed: " + devItem);
+							this.cycles.get(x).capacity_used -= infra.sizeTelemetryItems[devItem.getSecond()];
+						}
+					}
+				}
+			}
+		}
+	}
+
+	
+	//check spatial constraints - i.e., spatial requirement items must be collected by the same probe
+	for(int i = 0; i < this.cycles.size(); i++) {
+		System.out.println("Cycle: " + i + ":):):):):):):):):)");
+		for(int a = this.monApps.size() - 1; a >= 0; --a) {
+			for(int b = this.monApps.get(a).spatialRequirements.size() - 1; b >= 0 ; --b) {
+				ArrayList<int[]> auxCurrSpatialItems = new ArrayList<int[]>();
+				
+				for(int c = this.monApps.get(a).spatialRequirements.get(b).size() - 1; c >= 0 ; --c) {
+					int dev = this.monApps.get(a).deviceToBeCollected.get(b); 
+					int item = this.monApps.get(a).spatialRequirements.get(b).get(c);
+					Tuple devItem = new Tuple(dev,item);
+					
+					if(this.cycles.get(i).itemPerCycle.contains(devItem) && collected[a][b][c]) { //curr cycle collected the item
+						//System.out.println("devItem found: " + devItem);
+						int[] aux = new int[3]; //int[0]: probe ID, int[1]: device, int[2]: item
+						aux[0] = this.cycles.get(i).cycle_id;
+						aux[1] = dev;
+						aux[2] = item;
+						auxCurrSpatialItems.add(aux);
+					}else if(!this.cycles.get(i).itemPerCycle.contains(devItem) && collected[a][b][c]) { //AT LEAST another cycle collected the item			
+						for(int x = 0; x < this.cycles.size(); x++) {
+							if(x != i) {
+								if(this.cycles.get(x).itemPerCycle.contains(devItem) && collected[a][b][c]) {
+									int[] aux = new int[3];
+									aux[0] = this.cycles.get(x).cycle_id;
+									aux[1] = dev;
+									aux[2] = item;
+									auxCurrSpatialItems.add(aux);
+									break;
+								}
+							}
+						}
+					}else { //if no cycle has the item, then set its probe id to "-1" and try to reallocate it later (outter loop)
+						int[] aux = new int[3];
+						aux[0] = -1;
+						aux[1] = dev;
+						aux[2] = item;
+						auxCurrSpatialItems.add(aux);
+					}
+					
+				}
+				
+				/*for(int temp = 0; temp < auxCurrSpatialItems.size(); temp++) {
+					System.out.println("probeID: " + auxCurrSpatialItems.get(temp)[0] + " // dev: " + auxCurrSpatialItems.get(temp)[1] +
+							" // item: " + auxCurrSpatialItems.get(temp)[2]);
+				}*/
+				//System.out.println("array size: " + auxCurrSpatialItems.size() + ", curr spatial size: " + this.monApps.get(a).spatialRequirements.get(b).size());
+				
+				int currProbeId = this.cycles.get(i).cycle_id;
+				boolean probeDiff = false; //if probe IDs are different, reallocate items
+				for(int x = 0; x < auxCurrSpatialItems.size(); x++) {
+					if(currProbeId != auxCurrSpatialItems.get(x)[0]) { //if at least one item is not collected, then I can't remove the spatial requirement
+						//System.out.println("probeId: " + probeId + ", probeId2: " + auxCurrSpatialItems.get(x)[0]);
+						probeDiff = true;
+						break;
+					}
+				}
+				
+				//if all items are in the same probe (valid probe -- i.e., not '-1'), delete the spatial requirement and move on to the next spatial req
+				if(!probeDiff && currProbeId != -1) {
+					for(int c = monApps.get(a).spatialRequirements.get(b).size() - 1; c >= 0; --c) {
+						collected[a][b][c] = true;
+					}
+					//this.monApps.get(a).spatialRequirements.remove(b);
+					//this.monApps.get(a).deviceToBeCollected.remove(b);
+				}else {
+					//count the frequency of probes being used to collected the items from this spatial requirement
+					Map<Integer,Integer> probeFrequency = new HashMap<Integer,Integer>(); // map (probeID, num items curr spatial req)
+					for(int x = 0; x < auxCurrSpatialItems.size(); x++) {
+						Integer count = probeFrequency.get(auxCurrSpatialItems.get(x)[0]);
+						if(count == null) {
+						    probeFrequency.put(auxCurrSpatialItems.get(x)[0], 1);
+						}
+						else {
+						    probeFrequency.put(auxCurrSpatialItems.get(x)[0], count + 1);
+						}
+					}
+					
+					
+					//get a valid probe ID collecting most of the items (does not include probe ID == '-1')
+					int keyCollectingMost = -1;
+					int mostItems = Integer.MIN_VALUE;
+					for(Integer key : probeFrequency.keySet()) {
+						if(key != -1 && probeFrequency.get(key) > mostItems) {
+							mostItems = probeFrequency.get(key);
+							keyCollectingMost = key;
+						}
+					}
+					
+		
+					//if 'keyCollectingMost' is still '-1', all items from curr spatial req are not collected yet
+					if(keyCollectingMost == -1) {
+						//estimate what would cost to insert the whole unsatisfied spatial req into a cycle
+						int cost = 0;
+						for(int x = 0; x < auxCurrSpatialItems.size(); x++) {
+							int item = auxCurrSpatialItems.get(x)[2];
+							cost += infra.sizeTelemetryItems[item];
+						}
+						
+						//find a cycle to fit all of them
+						for(int x = 0; x < this.cycles.size(); x++) { 
+							if(this.cycles.get(x).capacity_used + cost <= this.cycles.get(x).capacity) {
+								for(int y = 0; y < auxCurrSpatialItems.size(); y++) {
+									int dev = auxCurrSpatialItems.get(y)[1];
+									int item = auxCurrSpatialItems.get(y)[2];
+									Tuple devItem = new Tuple(dev,item);
+									if(!this.cycles.get(x).itemPerCycle.contains(devItem) && this.cycles.get(x).nodes.contains(dev)) {
+										this.cycles.get(x).itemPerCycle.add(devItem);
+										this.cycles.get(x).capacity_used += infra.sizeTelemetryItems[item];	
+									}
+								}
+								for(int c = monApps.get(a).spatialRequirements.get(b).size() - 1; c >= 0; --c) {
+									collected[a][b][c] = true;
+								}
+								
+								break;
+							}
+						}	
+					}else { // at least one item is collected. So, try to fit the rest of them
+	
+						//get items' weight sum from other cycles - including non collected items (probeId '-1')
+						int costOtherItems = 0;
+						int costAllItems = 0;
+						for(int x = 0; x < auxCurrSpatialItems.size(); x++) {
+							int item = auxCurrSpatialItems.get(x)[2];
+							if(auxCurrSpatialItems.get(x)[0] != keyCollectingMost) {
+								costOtherItems += infra.sizeTelemetryItems[item];	
+							}
+							else {
+								costAllItems += infra.sizeTelemetryItems[item];	
+							}
+						}
+						costAllItems += costOtherItems;
+						
+						//try to fit the remaining items into the probe collecting most of the items
+						if(this.cycles.get(keyCollectingMost).capacity_used + costOtherItems <= this.cycles.get(keyCollectingMost).capacity) {
+							for(int y = 0; y < auxCurrSpatialItems.size(); y++) {
+								int dev = auxCurrSpatialItems.get(y)[1];
+								int item = auxCurrSpatialItems.get(y)[2];
+								Tuple devItem = new Tuple(dev,item);
+								if(!this.cycles.get(keyCollectingMost).itemPerCycle.contains(devItem)) {
+									this.cycles.get(keyCollectingMost).itemPerCycle.add(devItem);
+									this.cycles.get(keyCollectingMost).capacity_used += infra.sizeTelemetryItems[item];	
+								}
+								
+								for(int c = monApps.get(a).spatialRequirements.get(b).size() - 1; c >= 0; --c) {
+									collected[a][b][c] = true;
+								}
+								
+							}
+						}else{ //try to find another cycle and fit all items - including the partially collected
+							   //(In this case, the probe collecting most items has not enough space to collect all items)
+							
+							// check the following: 
+							//1. if: another spatial requirement needs this item, keep it in the last cycle and 
+							//make a copy of it into the new one along with the rest of the items
+							
+							//2. else if: no other cycle needs it, remove it from the cycle and fit all of them into a new one (in the case of: there is
+							//another cycle with available capacity)
+							
+							if(this.cycles.size() > 1) {
+								boolean allFit = false; //tells whether the new cycle has available space to collected all items
+								boolean hasAllDevices = true; //tells whether the new cycle contains all devices to collect all items
+								
+								for(int x = 0; x < this.cycles.size(); x++) {
+									if(x != keyCollectingMost) {
+										allFit = false; //tells whether the new cycle has available space to collected all items
+										hasAllDevices = true; //tells whether the new cycle contains all devices to collect all items
+										
+										//pre-checking: if the new cycle has all the required devices to fit all the items										
+										for(int y = 0; y < auxCurrSpatialItems.size(); y++) {
+											Integer dev = auxCurrSpatialItems.get(y)[1];
+											if(!this.cycles.get(x).nodes.contains(dev)) {
+												hasAllDevices = true;
+												break;
+											}
+										}
+										
+										if(!hasAllDevices) {
+											break; //stop trying for once and go to the next spatial requirement
+										}else if(this.cycles.get(x).capacity_used + costAllItems <= this.cycles.get(keyCollectingMost).capacity) {
+											for(int y = 0; y < auxCurrSpatialItems.size(); y++) {
+												int dev = auxCurrSpatialItems.get(y)[1];
+												int item = auxCurrSpatialItems.get(y)[2];
+												Tuple devItem = new Tuple(dev,item);
+												
+												if(!this.cycles.get(x).itemPerCycle.contains(devItem)) {
+													this.cycles.get(x).itemPerCycle.add(devItem);
+													this.cycles.get(x).capacity_used += infra.sizeTelemetryItems[item];	
+												}
+											}
+											allFit = true;
+											for(int c = monApps.get(a).spatialRequirements.get(b).size() - 1; c >= 0; --c) {
+												collected[a][b][c] = true;
+											}
+											
+										}
+										if(allFit) { //sucessfully reallocated all items... go to the next spatial req
+											break;
+										}
+									}	
+								}
+								
+								
+							}
+
+						}
+						
+						
+						if(probeFrequency.get(keyCollectingMost) == auxCurrSpatialItems.size() && keyCollectingMost != -1) {
+							for(int c = monApps.get(a).spatialRequirements.get(b).size() - 1; c >= 0; --c) {
+								collected[a][b][c] = true;
+							}
+							//this.monApps.get(a).spatialRequirements.remove(b);
+							//this.monApps.get(a).deviceToBeCollected.remove(b);
+						}else {
+							//System.out.println("probeFrequency: " + probeFrequency);
+							//System.out.println("key: " + keyCollectingMost);
+							//System.out.println("value: " + probeFrequency.get(keyCollectingMost));
+						}
+					
+					}
+					
+				}
+				
+			}
+			
+		}
+		
+	}
+	
+	
+	//print collected
+	/*for(int a = 0; a < collected.length; a++) {
+		for(int b = 0; b < collected[a].length; b++) {
+			for(int c = 0; c < collected[a][b].length; c++) {
+				System.out.println("collected["+a+"]["+b+"]["+c+"] = " + collected[a][b][c]);
+			}
+		}
+	}*/
+	
+	/*for(int i = 0; i < infra.telemetryItemsRouter; i++) {
+		System.out.println("item: " + i + ": " + infra.sizeTelemetryItems[i]);
+	}*/
+	
+	
+	//remove empty cycles - if any
+	for(int i = this.cycles.size() - 1; i >= 0; --i) {
+		if(this.cycles.get(i).itemPerCycle.isEmpty()) {
+			this.cycles.remove(i);
+		}
+	}
+	
+	
+	
+	//track fully satisfied spatial requirements to remove partially collected ones (or shadow ones -- i.e., satisfied twice or more)
+	boolean[][][] whatProbesSatisfied = new boolean[this.cycles.size()][this.monApps.size()][numMaxSpatialDependencies]; //[index 0]: probe id, [index 1]: mon app, [index 2]: spatial req
+	for(int a = 0; a < this.monApps.size(); a++) {
+		for(int b = 0; b < this.monApps.get(a).spatialRequirements.size(); b++) {
+			int sizeCurrSpatial = this.monApps.get(a).spatialRequirements.get(b).size();
+			for(int i = 0; i < this.cycles.size(); i++) { //check whether the current cycle contains all items from the current spatial req
+				int counterSizeSpatial = 0;
+				for(int c = 0; c < this.monApps.get(a).spatialRequirements.get(b).size(); c++) {
+					int dev = this.monApps.get(a).deviceToBeCollected.get(b);
+					int item = this.monApps.get(a).spatialRequirements.get(b).get(c);
+					
+					if(this.cycles.get(i).itemPerCycle.contains(new Tuple(dev,item))) {
+						counterSizeSpatial++;
+					}
+				}
+				
+				if(counterSizeSpatial == sizeCurrSpatial) { //cycle contains all the items of the current spatial req
+					//[index 0]: probe id, [index 1]: mon app, [index 2]: spatial req
+					whatProbesSatisfied[i][a][b] = true;
+				}
+				
+			}
+		}
+	}
+	
+
+	
+	
+	
+	//print what probes satisfied a given spatial req from a given mon app
+	System.out.println("what probes satisfied a given spatial req from a given mon app: " );
+	/*for(int a = 0; a < whatProbesSatisfied.length; a++) {
+		for(int b = 0; b < whatProbesSatisfied[a].length; b++) {
+			for(int c = 0; c < whatProbesSatisfied[a][b].length; c++) {
+				System.out.println("whatProbesSatisfied["+a+"]["+b+"]["+c+"] = " + whatProbesSatisfied[a][b][c]);
+			}
+		}
+	}*/
+	
+	//collected:           boolean[0]: mon app id, boolean[1]: dev id (spatial req id), boolean[2]: item position
+	//whatProbesSatisfied: boolean[0]: probe id,   boolean[1]: mon app,                 boolean[2]: spatial req
+	
+	//until now... items may be reallocated into new probes... However, the copied items must be removed from older probe cycles
+	//for(int c = 0; c < numMaxSpatialDependencies; c++) { //NOTE: actually, generatingMonApps is not respecting this variable correctly
+	for(int c = 0; c < numMaxSpatialDependencies-1; c++) {
+		for(int b = 0; b < this.monApps.size(); b++) {
+			int counterProbes = 0;
+			
+			for(int a = 0; a < this.cycles.size(); a++) { //iterate probes
+				System.out.println("whatProbesSatisfied["+a+"]["+b+"]["+c+"] = " + whatProbesSatisfied[a][b][c]);
+				if(whatProbesSatisfied[a][b][c]) {
+					counterProbes++;
+				}
+			}
+			
+			//if(counterProbes == 1) { //special case - there is only one probe collecting this spatial req
+			//get the one where it is not true
+			for(int a = 0; a < this.cycles.size(); a++) { //iterate all other probes, except the ones collecting the spatial req completely
+				if(!whatProbesSatisfied[a][b][c]) {
+					
+					//count the frequency of devices (trying to find another spatial req)
+					//countDevs says: there are N items in this cycle that need this device
+					Map<Integer,Integer> countDevs = new HashMap<Integer,Integer>();
+					int whichDevice = this.monApps.get(b).deviceToBeCollected.get(c);
+					for(int x = 0; x < this.cycles.get(a).itemPerCycle.size(); x++) {
+						Integer count = countDevs.get(this.cycles.get(a).itemPerCycle.get(x).getFirst());
+						if(count == null && this.cycles.get(a).itemPerCycle.get(x).getFirst() == whichDevice) {
+							countDevs.put(this.cycles.get(a).itemPerCycle.get(x).getFirst(), 1);
+						}
+						else if(this.cycles.get(a).itemPerCycle.get(x).getFirst() == whichDevice) {
+							countDevs.put(this.cycles.get(a).itemPerCycle.get(x).getFirst(), count + 1);
+						}
+					}
+					
+					//print countDevs
+					System.out.println("countDevs hashmap: " + countDevs);
+					
+					
+					//check whether another cycle needs to maintain these items (using 'countDevs' info), otherwise delete all of them
+					if(!countDevs.isEmpty()) {
+						int countItems = countDevs.get(whichDevice);
+						
+						//get the smallest size of spatial req
+						int minSizeSpatialReq = Integer.MAX_VALUE;
+						for(int aa = 0; aa < this.monApps.size(); aa++) {
+							for(int bb = 0; bb < this.monApps.get(aa).spatialRequirements.size(); bb++) {
+								if(this.monApps.get(aa).spatialRequirements.get(bb).size() < minSizeSpatialReq) {
+									minSizeSpatialReq = this.monApps.get(aa).spatialRequirements.get(bb).size();
+								}
+							}
+						}
+						
+						//if the number of items with the same device is smaller than the smallest existing spatial req, 
+						//then it is partially satisfying it and must be removed
+						if(countItems < minSizeSpatialReq) {
+							for(int x = this.cycles.get(a).itemPerCycle.size() - 1; x >= 0 ; --x) {
+								int dev = this.cycles.get(a).itemPerCycle.get(x).getFirst();
+								
+								if(dev == whichDevice) {
+									int item = this.cycles.get(a).itemPerCycle.get(x).getSecond();
+									this.cycles.get(a).itemPerCycle.remove(x);
+									this.cycles.get(a).capacity_used += infra.sizeTelemetryItems[item];
+								}
+								
+							}
+						}
+					}	
+				}
+				
+			}
+				
+			//if there are more than a single probe satisfying the same spatial req and check if they rest of them is oversatisfying it (twice or more)
+			if(counterProbes > 1) {
+				
+				ArrayList<Integer> allProbesIdsCollecting = new ArrayList<Integer>(); //all probes IDs collecting the same spatial req
+				for(int a = 0; a < this.cycles.size(); a++) {
+					if(whatProbesSatisfied[a][b][c]) {
+						allProbesIdsCollecting.add(a);
+					}
+				}
+				
+				//there must be only one cycle collecting the same spatial req
+				while(allProbesIdsCollecting.size() > 1) {
+					
+					int idx0 = allProbesIdsCollecting.get(0); //first probe index
+					int idx1 = allProbesIdsCollecting.get(1); //second probe index
+					int countItemsIdx0 = 0; //count how many items it satisfies
+					int countItemsIdx1 = 0; //count how many items it satisfies
+					int devSpatialReq = this.monApps.get(b).deviceToBeCollected.get(c);
+					
+					
+					for(int x = 0; x < this.cycles.get(idx0).itemPerCycle.size(); x++) {
+						int dev0 = this.cycles.get(idx0).itemPerCycle.get(x).getFirst();
+						if(dev0 == devSpatialReq) {
+							countItemsIdx0++;
+						}
+					}
+					
+					for(int y = 0; y < this.cycles.get(idx1).itemPerCycle.size(); y++) {
+						int dev1 = this.cycles.get(idx1).itemPerCycle.get(y).getFirst();						
+						if(dev1 == devSpatialReq) {
+							countItemsIdx1++;
+						}	
+					}
+					
+					System.out.println("countItemsIdx0: " + countItemsIdx0 + ", countItemsIdx1: " + countItemsIdx1);
+					
+					//if the first probe (higher capacity used) has all items and/or more items from the same device, delete the second cycle
+					if(countItemsIdx0 >= countItemsIdx1) { 
+						for(int y = this.cycles.get(idx1).itemPerCycle.size() - 1; y >= 0; --y) {
+							int dev1 = this.cycles.get(idx1).itemPerCycle.get(y).getFirst();
+							if(dev1 == devSpatialReq) {
+								int item1 = this.cycles.get(idx1).itemPerCycle.get(y).getSecond();
+								this.cycles.get(idx1).capacity_used += infra.sizeTelemetryItems[item1];
+								this.cycles.get(idx1).itemPerCycle.remove(y);
+							}
+						}
+						allProbesIdsCollecting.remove(1);
+					}else { //countItemsIdx0 < countItemsIdx1 //
+						//if the second probe (higher capacity used) has all items and more items from the same device, delete the first cycle
+						for(int x = this.cycles.get(idx0).itemPerCycle.size() - 1; x >= 0; --x) {
+							int dev0 = this.cycles.get(idx0).itemPerCycle.get(x).getFirst();
+							if(dev0 == devSpatialReq) {
+								int item0 = this.cycles.get(idx1).itemPerCycle.get(x).getSecond();
+								this.cycles.get(idx0).capacity_used += infra.sizeTelemetryItems[item0];
+								this.cycles.get(idx0).itemPerCycle.remove(x);
+							}
+						}
+						allProbesIdsCollecting.remove(0);
+					}
+				}
+				
+			}
+			
+			
+				
+		}
+	}
+	
+	
+	//remove empty cycles - if any
+	for(int i = this.cycles.size() - 1; i >= 0; --i) {
+		if(this.cycles.get(i).itemPerCycle.isEmpty()) {
+			this.cycles.remove(i);
+		}
+	}
+	
+	
+	//remove everything already collected
+	for(int i = this.monApps.size() - 1; i >= 0; --i) {
+		for(int j = this.monApps.get(i).spatialRequirements.size() - 1; j >= 0; --j) {
+			for(int k = this.monApps.get(i).spatialRequirements.get(j).size() - 1; k >= 0; --k) {
+				if(collected[i][j][k]) {
+					this.monApps.get(i).spatialRequirements.get(j).remove(k);
+				}
+			}
+			if(this.monApps.get(i).spatialRequirements.get(j).isEmpty()) {
+				this.monApps.get(i).spatialRequirements.remove(j);
+				this.monApps.get(i).deviceToBeCollected.remove(j);
+			}
+		}
+		if(this.monApps.get(i).spatialRequirements.isEmpty()) {
+			this.monApps.remove(i);
+		}
+	}
+
+	
+	//Create new probe paths if necessary 
+	//TIP: Comment the for-group above to simulate a scenario where there are remaining items to be collected
+	
+	//NOTE: MUST GUARANTEE ALL SPATIAL REQUIREMENT ITEMS ARE BEEN COLLECTED BY THE SAME PROBE IN THIS METHOD AND OPTIMIZATION METHOD
+	
+	//this method return a arraylist of cycles. These cycles are added to the existing solution
+	/*ArrayList<Cycle> tempCycles = new ArrayList<Cycle>();
+	tempCycles = firstApproach(this.monApps, this.capacityProbe);
+	for(Cycle c: tempCycles) {
+		this.cycles.add(c);
+	}*/
+	
+
+	//post processing
+	System.out.println("cycles size (after dynMon): " + this.cycles.size());
+	for(int i = 0; i < this.cycles.size(); i++) {
+		this.cycles.get(i).printCycleWithCapacity();	
+	}
+	
+	
+}
+
 
 
 }

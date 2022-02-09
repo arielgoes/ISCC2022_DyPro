@@ -52,7 +52,7 @@ public Cycle clone() throws CloneNotSupportedException {
 	
 public boolean hasItem(int item) {
 	for(int i = 0; i < this.itemPerCycle.size(); i++) {
-		if(this.itemPerCycle.get(i).getItem() == item) {
+		if(this.itemPerCycle.get(i).getSecond() == item) {
 			//System.out.println("asd: " + this.itemPerCycle.get(i).getItem() + " asd2: " + restrictionItem);
 			return true;
 		}

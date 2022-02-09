@@ -91,31 +91,22 @@ public class Teste {
 			
 			//solver
 			MonAppSpatialTemporalApproaches dynamicMonApp = new MonAppSpatialTemporalApproaches(infra, seed, capacityProbe);
-			dynamicMonApp.cycles = dynamicMonApp.firstApproach(monitoringApps, capacityProbe);
+			//dynamicMonApp.cycles = dynamicMonApp.firstApproach(monitoringApps, capacityProbe);
 			//dynamicMonApp.cycles = dynamicMonApp.secondApproach(monitoringApps, capacityProbe, monApps);
-			monApps.printMonitoringApps(dynamicMonApp.clonedMonApps);
-			System.out.println("TU TA NA MAIN MANO: ");
-			System.out.println("(main) size cloned: " + dynamicMonApp.clonedMonApps.size());
-			System.out.println("(main) size origin: " + monitoringApps.size());
+			dynamicMonApp.cycles = dynamicMonApp.firstApproach(monitoringApps, capacityProbe);
+
 			
 			System.out.println("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.- NEW MONITORING APPS -.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-");
-			//solver
 			monitoringApps = monApps.generateMonitoringApps(seed+1, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, networkSize);
-			monApps.printMonitoringApps(dynamicMonApp.clonedMonApps);
+			monApps.printMonitoringApps(monitoringApps);
 			
-			//optimizer
+						
 			System.out.println("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.- NEW MONITORING APPS (AFTER OPTIMIZE)-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-");
-			dynamicMonApp.dynamicMonAppProbeGenerator(monitoringApps);
-			monApps.printMonitoringApps(dynamicMonApp.clonedMonApps); //should print it empty
-			
-			System.out.println("TU TA NA MAIN MANO DE NOVO: ");
-			System.out.println("(main) size cloned: " + dynamicMonApp.clonedMonApps.size());
-			System.out.println("(main) size origin: " + monitoringApps.size());
+			//optimizer
+			dynamicMonApp.dynamicMonAppProbeGeneratorRestrict(monitoringApps,numMaxSpatialDependencies,maxSizeSpatialDependency);
+			monApps.printMonitoringApps(dynamicMonApp.monApps); //should print it empty
 			
 		}
-		
-	
-		
 		
 	
 	}

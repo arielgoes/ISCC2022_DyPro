@@ -2,8 +2,15 @@ package main;
 
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Random;
+import java.util.Map.Entry;
 
 import heuristics.Cycle;
 
@@ -11,6 +18,7 @@ public class MonitoringApp implements Cloneable{
 
 	//Need to define monitoring requirements
 	public ArrayList<ArrayList<Integer>> spatialRequirements; //{ {0,2,3}, {4,5} }
+	public ArrayList<ArrayList<Boolean>> collectedItems;
 	public ArrayList<Integer> deviceToBeCollected; // [ 3, 5 ] --> e.g., items '{0,2,3}' must be collected from device '3' and so on...
 	
 	//<0, 2>
@@ -20,10 +28,10 @@ public class MonitoringApp implements Cloneable{
 	ArrayList<Integer> lastTimeCollected;  //it stores 
 	
 public MonitoringApp() {
-	this.spatialRequirements  = new ArrayList<ArrayList<Integer>>();
+	this.spatialRequirements  = new ArrayList<ArrayList<Integer>>(); //[[2,3,4], [4,5]]
 	this.temporalRequirements = new ArrayList<Integer>();
 	this.lastTimeCollected    = new ArrayList<Integer>();
-	this.deviceToBeCollected  = new ArrayList<Integer>(); //it tells me from what device a spatial requirement must be satisfied from
+	this.deviceToBeCollected  = new ArrayList<Integer>(); //it tells me from what device a spatial requirement must be satisfied from 
 }
 
 @Override
@@ -31,7 +39,9 @@ public MonitoringApp clone() throws CloneNotSupportedException{
 	try{
        MonitoringApp clonedMyClass = (MonitoringApp)super.clone();
        // if you have custom object, then you need create a new one in here
-	   	   return clonedMyClass;
+	   
+       return clonedMyClass;
+       
 	   } catch (CloneNotSupportedException e) {
 	       e.printStackTrace();
 	       return new MonitoringApp();
@@ -102,7 +112,6 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 						}while(hasItem);
 						
 						spatialItems.add(telemetryCandidate);
-						
 						
 					}
 					
@@ -240,11 +249,6 @@ public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayL
 	
 	return unsatisfiedMonItems;
 }*/
-
-
-
-
-
 
 
 
