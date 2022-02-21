@@ -227,8 +227,8 @@ public class FixOptPInt {
 			Hashtable<String, Integer> hasVarZ = new Hashtable<String, Integer>();
 			
 			for(int j = 0; j < cyclesER.get(p).itemPerCycle.size(); j++) {
-				iAux = cyclesER.get(p).itemPerCycle.get(j).device;
-				jAux = cyclesER.get(p).itemPerCycle.get(j).item;
+				iAux = cyclesER.get(p).itemPerCycle.get(j).getFirst();
+				jAux = cyclesER.get(p).itemPerCycle.get(j).getSecond();
 				zMetrics[p][jAux][iAux] = 1;
 			}
 			/*for(int j = 0; j < cyclesER.get(p).itemPerCycle.size(); j++) {
@@ -920,4 +920,41 @@ public class FixOptPInt {
 
 
 	}
+	
+	
+	public ArrayList<Cycle> convertToCycleUnordered() {
+		ArrayList<Cycle> cycles = new ArrayList<Cycle>();
+		
+		//get links		
+		for(int i = 0; i < this.maxProbes; i++) {
+			Cycle c = new Cycle();
+			for(int j = 0; j < this.infra.size; j++) {
+				for(int k = 0; k < this.infra.size; k++) {
+					if(this.xMetrics[i][j][k] == 1) {
+						c.links.add(Pair.create(j, k));
+						c.capacity_used += 1;
+						c.nodes.add(k);
+					}
+				}
+			}
+			c.cycle_id = i;
+			c.nodes.add(0, i);
+			c.nodes.add(c.nodes.size()-1, i);
+			
+			//get items
+			for(int j = 0; j < infra.telemetryItemsRouter; j++) {
+				for(int k = 0; k < infra.size; k++) {
+					if(this.zMetrics[i][j][k] == 1) {
+						c.itemPerCycle.add(new Tuple(k,j));
+						c.capacity_used += infra.sizeTelemetryItems[j];
+					}
+				}
+			}
+		}
+		
+		return cycles;
+	}
+	
+	
+	
 }

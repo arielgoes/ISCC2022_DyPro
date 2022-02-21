@@ -1,5 +1,7 @@
 package heuristics;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class Cycle implements Cloneable{
 	public ArrayList<Tuple> itemPerCycle;
@@ -60,11 +62,31 @@ public boolean hasItem(int item) {
 	return false;
 }
 
+public int getCapacityUsed() {
+	return this.capacity_used;
+}
+
 public boolean hasDevice(int dev) { //true if it has the input node/device
 	if(this.nodes.contains(dev)) {
 		return true;
 	}
 	return false;
 }
+
+
+public static Comparator<Cycle> CycleCapacityUsedDescending = new Comparator<Cycle>() {
+
+	public int compare(Cycle c1, Cycle c2) {
+
+	   int cycleusage1 = c1.getCapacityUsed();
+	   int cycleusage2 = c2.getCapacityUsed();
+
+	   /*For ascending order*/
+	   //return cycleusage1-cycleusage2;
+
+	   /*For descending order*/
+	   return cycleusage2-cycleusage1;
+   }
+};
 
 }

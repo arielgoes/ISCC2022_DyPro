@@ -12,6 +12,7 @@ import heuristics.EdgeRandomization;
 import heuristics.FixOptPInt;
 import heuristics.OptPathPlan;
 import heuristics.Pair;
+import heuristics.Tuple;
 import ilog.concert.IloException;
 
 public class Statistics {
@@ -31,279 +32,9 @@ public class Statistics {
 		
 	}
 	
-	public Statistics(int maxProbes, int networkSize, int capacityProbe, NetworkInfrastructure infra) {
-		this.maxProbes = maxProbes;
-		this.networkSize = networkSize;
-		this.capacityProbe = capacityProbe;
-		this.infra = infra;
-	}
-	
-	public String runCARP(CARP_Victor model) {
-		this.result = ";";
-		this.result += model.cycles.size() + ";";
-		this.result += model.time + ";" + this.infra.size + ";" + this.infra.telemetryItemsRouter + ";" + this.infra.maxSizeTelemetryItemsRouter + ";" + this.maxProbes + ";" + this.capacityProbe + ";";
-		this.result += transportationOverheadCycles(model.cycles, false);
-		this.result += model.cycles.size() + ";" + model.cycles.size() + ";" + model.cycles.size() + ";";   // collector overhead with only one collector
-		this.result += probeUsageCycles(model.cycles);
-		this.result += deviceOverheadCycles(model.cycles);
-		this.result += linkOverheadCycles(model.cycles);
-		this.result += transportationOverheadCycles(model.cycles, true);
-		this.result += this.infra.seed + ";";
-		return this.result;
-	}
-	
-	public String runOPP(OptPathPlan opp, boolean multipleCollectors) {
-		this.result = ";";
-		this.result += opp.Q.size() + ";";
-		this.result += opp.time + ";" + this.infra.size + ";" + this.infra.telemetryItemsRouter + ";" + this.infra.maxSizeTelemetryItemsRouter + ";" + this.maxProbes + ";" + this.capacityProbe + ";";
-		this.result += transportationOverheadCycles(opp.Q, false) + ";";
-		this.result += opp.Q.size() + ";";       //collector overhead
-		this.result += probeUsageCycles(opp.Q);
-		this.result += deviceOverheadCycles(opp.Q);
-		this.result += linkOverheadCycles(opp.Q);
-		this.result += transportationOverheadCycles(opp.Q, true) + ";";
-		this.result += this.infra.seed + ";";
-		return this.result;
-	}
-	
-	public String runOptimal(AlgorithmOpt opt, int collector) throws IloException {
-		this.result = ";";
-		this.result += (int) opt.cplex.getObjValue() + ";";
-		this.result += opt.time + ";" + this.infra.size + ";" + this.infra.telemetryItemsRouter + ";" + this.infra.maxSizeTelemetryItemsRouter + ";" + this.maxProbes + ";" + this.capacityProbe + ";";
-		this.result += "0;";
-		this.result += (int) opt.cplex.getObjValue() + ";";     //collector overhead
-		this.result += probeUsageCplex(opt);
-		this.result += deviceOverheadCplex(opt);
-		this.result += linkOverheadCplex(opt);
-		this.result += collector + ";";
-		this.result += this.infra.seed + ";";
-		return this.result;
-	}
-	
-	public String transportationOverheadCycles(ArrayList<Cycle> cycles, boolean getCollector) {
-		int min = Integer.MAX_VALUE;
-		int collector = -1;
-		String transpOverhead = "";
-		for(int i = 0; i < this.networkSize; i++) {
-			int transportationCost = 0;
-			for(Cycle c: cycles) {
-				int cost = this.infra.getShortestPath(c.nodes.get(0), i).size();
-				if(cost < 0) {
-					cost = 0;
-				}
-				transportationCost += cost;
-			}
-			if(transportationCost < min) {
-				min = transportationCost;
-				collector = i;
-			}
-		}
-		if(getCollector) {
-			transpOverhead = collector + ";";
-		}else {			
-			transpOverhead = min + ";";
-		}
-		return transpOverhead;
-	}
-	
-	public String probeUsageCycles(ArrayList<Cycle> cycles) {
-		int min = Integer.MAX_VALUE;
-		float avg = 0;
-		int max = Integer.MIN_VALUE;
-		for(Cycle c: cycles) {
-			avg += c.capacity_used;
-			if(c.capacity_used < min) {
-				min = c.capacity_used;
-			}
-			if(c.capacity_used > max) {
-				max = c.capacity_used;
-			}
-		}
-		avg = avg / (this.capacityProbe * cycles.size());
-		String probeUsage = min + ";" + max + ";" + avg + ";";
-		return probeUsage;
-	}
-	
-	private String deviceOverheadCycles(ArrayList<Cycle> cycles) {
-		int[] devOverhead = new int[this.networkSize];
-		int min = Integer.MAX_VALUE;
-		float avg = 0;
-		int max = Integer.MIN_VALUE;
-		for(Cycle c: cycles) {
-			for(int i = 0; i < c.nodes.size(); i++) {
-				devOverhead[c.nodes.get(i)]++;
-			}
-		}
-		for(int i = 0; i < this.networkSize; i++) {
-			avg += devOverhead[i];
-			if(devOverhead[i] < min) {
-				min = devOverhead[i];
-			}
-			if(devOverhead[i] > max) {
-				max = devOverhead[i];
-			}
-		}
-		avg = avg / this.networkSize;
-		String deviceOverhead = min + ";" + max + ";" + avg + ";";
-		return deviceOverhead;
-	}
-	
-	public String linkOverheadCycles(ArrayList<Cycle> cycles) {
-		int numLinks = 0;
-		for(int i = 0; i < this.networkSize; i++) {
-			for(int j = 0; j < this.networkSize; j++) {
-				if(this.infra.graph[i][j] == 1) {
-					numLinks++;
-				}
-			}
-		}
-		
-		int[][] linkOverhead = new int[this.networkSize][this.networkSize];
-		int min = Integer.MAX_VALUE;
-		float avg = 0;
-		int max = Integer.MIN_VALUE;
-		for(Cycle c: cycles) {
-			for(Pair<Integer, Integer> p: c.links) {
-				linkOverhead[(int) p.first][(int) p.second]++;
-				linkOverhead[(int) p.second][(int) p.first]++;
-			}
-		}
-		for(int i = 0; i < this.networkSize; i++) {
-			for(int j = 0; j < this.networkSize; j++) {
-				if(linkOverhead[i][j] != 0) {					
-					avg += linkOverhead[i][j];
-					if(linkOverhead[i][j] < min) {
-						min = linkOverhead[i][j];
-					}
-					if(linkOverhead[i][j] > max) {
-						max = linkOverhead[i][j];
-					}
-				}
-			}
-		}
-		avg = avg / numLinks;
-		
-		String linkOverheads = min + ";" + max + ";" + avg + ";";
-		
-		return linkOverheads;
-	}
-	
-	public String probeUsageCplex(AlgorithmOpt opt) {
-		int probes = 0;
-		int min = Integer.MAX_VALUE;
-		float avg = 0;
-		int max = Integer.MIN_VALUE;
-		
-		for(int i = 0; i < this.maxProbes; i++) {
-			int cap = 0;
-			for(int j = 0; j < this.networkSize; j++) {
-				for (int k = 0; k < this.networkSize; k++) {
-					if(opt.xMetrics[i][j][k] == 1) {
-						cap++;
-					}
-				}
-			}
-			
-			for(int j = 0; j < this.infra.telemetryItemsRouter; j++) {
-				for(int k = 0; k < this.networkSize; k++) {
-					if(opt.zMetrics[i][j][k] == 1) {
-						cap += this.infra.sizeTelemetryItems[j];
-					}
-				}
-			}
-			if(cap != 0) {
-				probes++;
-				avg += cap;
-				if(cap > max) {
-					max = cap;
-				}
-				if(cap < min) {
-					min = cap;
-				}
-			}
-		}
-		avg = avg/(this.capacityProbe * probes);
-		
-		String probeUsage = min + ";" + max + ";" + avg + ";";
-		return probeUsage;
-	}
-	
-	public String deviceOverheadCplex(AlgorithmOpt opt) {
-		int min = Integer.MAX_VALUE;
-		float avg = 0;
-		int max = Integer.MIN_VALUE;
-		int[] devOverhead = new int[this.networkSize];
-		for(int i = 0; i < this.maxProbes; i++) {
-			for(int j = 0; j < this.networkSize; j++) {
-				for(int k = 0; k < this.networkSize; k++) {
-					if(opt.xMetrics[i][j][k] == 1) {
-						devOverhead[k]++;
-					}
-				}
-			}
-		}
-		for(int i = 0; i < this.networkSize; i++) {
-			avg += devOverhead[i];
-			if(devOverhead[i] < min) {
-				min = devOverhead[i];
-			}
-			if(devOverhead[i] > max) {
-				max = devOverhead[i];
-			}
-		}
-		avg = avg / this.networkSize;
-		
-		String deviceOverhead = min + ";" + max + ";" + avg + ";";
-		return deviceOverhead;
-	}
-	
-	public String linkOverheadCplex(AlgorithmOpt opt) {
-		int numLinks = 0;
-		for(int i = 0; i < this.networkSize; i++) {
-			for(int j = 0; j < this.networkSize; j++) {
-				if(this.infra.graph[i][j] == 1) {
-					numLinks++;
-				}
-			}
-		}
-		int[][] overhead = new int[this.networkSize][this.networkSize];
-		int min = Integer.MAX_VALUE;
-		float avg = 0;
-		int max = Integer.MIN_VALUE;
-		
-		for(int i = 0; i < this.maxProbes; i++) {
-			for(int j = 0; j < this.networkSize; j++) {
-				for(int k = 0; k < this.networkSize; k++) {
-					if(opt.xMetrics[i][j][k] == 1) {
-						overhead[j][k]++;
-					}
-				}
-			}
-		}
-		for(int i = 0; i < this.networkSize; i++) {
-			for(int j = 0; j < this.networkSize; j++) {
-				if(overhead[i][j] != 0) {					
-					avg += overhead[i][j];
-					if(overhead[i][j] < min) {
-						min = overhead[i][j];
-					}
-					if(overhead[i][j] > max) {
-						max = overhead[i][j];
-					}
-				}
-			}
-		}
-		avg = avg / numLinks;
-		String linkOverhead = min + ";" + max + ";" + avg + ";";
-		return linkOverhead;
-	}
-	
-	
-	
-	//parte do ariel
+
 	// -Métrica 1: Sobrecarga de dados: distância coletor (mínima)
 	//mode 0: opt, mode 1: fixOpt, mode 2: heur
-	
 	public int transportationOverhead(EdgeRandomization modelER, ArrayList<Cycle> paths, FixOptPInt fixOpt, AlgorithmOpt opt, int[] collectors, int maxProbes, int mode) {
 		int minDistCollector = 0;
 		
@@ -909,5 +640,213 @@ public class Statistics {
 		
 		return linkOverhead;		
 	}
+	
+	
+	
+	
+	//verify how many spatial requirements are being satisfied by an heuristic
+	public int verifySatisfiedSpatialRequirements(ArrayList<MonitoringApp> copyMonApps, ArrayList<Cycle> cycles) {
+		
+		int numSatisfiedReqs = 0;
+		for(int a = 0; a < copyMonApps.size(); a++) {
+			for(int b = 0; b < copyMonApps.get(a).spatialRequirements.size(); b++) {
+				ArrayList<Tuple> devItems = new ArrayList<Tuple>();
+				int dev = copyMonApps.get(a).deviceToBeCollected.get(b);
+				for(int c = 0; c < copyMonApps.get(a).spatialRequirements.get(b).size(); c++) {
+					int item = copyMonApps.get(a).spatialRequirements.get(b).get(c);
+					devItems.add(new Tuple(dev,item));
+				}
+				
+				
+				boolean found = false;
+				for(Cycle c : cycles) {
+					if(c.itemPerCycle.containsAll(devItems)) {
+						numSatisfiedReqs++;
+						found = true;
+						break;
+					}
+				}
+				
+				/*if(!found) {
+					System.out.println("(not collected) devItems: " + devItems);
+				}*/
+			}
+		}
+		
+		return numSatisfiedReqs;
+	}
+	
+	
+	
+	//compare to old solution and collect changes (# of items reallocated)
+	public double[] changesOnLinksAndItems(ArrayList<Cycle> Q_old, ArrayList<Cycle> Q) {
+		double minDiffNumLinks = Integer.MAX_VALUE;
+		double minDiffLinks = Integer.MAX_VALUE;
+		double minDiffNumItems = Integer.MAX_VALUE;
+		double minDiffItems = Integer.MAX_VALUE;
+		
+		double maxDiffNumLinks = Integer.MIN_VALUE;
+		double maxDiffLinks = Integer.MIN_VALUE;
+		double maxDiffNumItems = Integer.MIN_VALUE;
+		double maxDiffItems = Integer.MIN_VALUE;
+		
+		double avgDiffNumLinks = 0;
+		double avgDiffLinks = 0;
+		double avgDiffNumItems = 0;
+		double avgDiffItems = 0;
+		
+		
+		double[] changesOnLinksAndItems = new double[12];
+		
+		double size = 0;
+		for(int i = 0; i < Q_old.size(); i++) {
+			boolean foundMyBrother = false;
+			for(int j = 0; j < Q.size(); j++) {
+				//System.out.println("old id: " + Q_old.get(i).id + " new id: " + Q.get(j).id);
+				if(Q_old.get(i).cycle_id == Q.get(j).cycle_id) { //compare modifications to the cycle
+					size++;
+					
+					//differences between the links (before and after failures)
+					int diffNumLinks = 0;
+					
+					//compare links size
+					if(Q_old.get(i).links.size() > Q.get(j).links.size()) {
+						diffNumLinks = Q_old.get(i).links.size() - Q.get(j).links.size();	
+					}else {
+						diffNumLinks = Q.get(j).links.size() - Q_old.get(i).links.size();
+					}
+					
+					//get min max avg
+					if(diffNumLinks < minDiffNumLinks) {
+						minDiffNumLinks = diffNumLinks;
+					}
+					if(diffNumLinks > maxDiffNumLinks) {
+						maxDiffNumLinks = diffNumLinks;
+					}
+					avgDiffNumLinks += diffNumLinks;
+					
+					//compare link by link
+					int diffLinks = 0;
+					if(Q_old.get(i).links.size() > Q.get(j).links.size()) {
+						for(int n = 0; n < Q.get(j).links.size(); n++) {
+							if(Q_old.get(i).links.contains(Q.get(j).links.get(n))) {
+								diffLinks++;
+								continue;
+							}
+						}
+						diffLinks = Q_old.get(i).links.size() - diffLinks;	
+					}else {
+						for(int n = 0; n < Q_old.get(i).links.size(); n++) {
+							if(Q.get(j).links.contains(Q_old.get(i).links.get(n))) {
+								diffLinks++;
+								continue;
+							}
+						}
+						diffLinks = Q.get(j).links.size() - diffLinks;
+					}
+					
+					//get min max avg
+					if(diffLinks < minDiffLinks) {
+						minDiffLinks = diffLinks;
+					}
+					if(diffLinks > maxDiffLinks) {
+						maxDiffLinks = diffLinks;
+					}
+					avgDiffLinks += diffLinks;
+					
+					//differences between the items (before and after failures)
+					int diffNumItems = 0;
+					
+					//compare items size
+					if(Q_old.get(i).itemPerCycle.size() > Q.get(j).itemPerCycle.size()) {
+						diffNumItems = Q_old.get(i).itemPerCycle.size() - Q.get(j).itemPerCycle.size();	
+					}else {
+						diffNumItems = Q.get(j).itemPerCycle.size() - Q_old.get(i).itemPerCycle.size();
+					}
+					
+					//get min max avg
+					if(diffNumItems < minDiffNumItems) {
+						minDiffNumItems = diffNumItems;
+					}
+					if(diffNumItems > maxDiffNumItems) {
+						maxDiffNumItems = diffNumItems;
+					}
+					avgDiffNumItems += diffNumItems;
+					
+					//compare item by item
+					int diffItems = 0;
+					if(Q_old.get(i).itemPerCycle.size() > Q.get(j).itemPerCycle.size()) {						
+						for(int n = 0; n < Q.get(j).itemPerCycle.size(); n++) {
+							if(Q_old.get(i).itemPerCycle.contains(Q.get(j).itemPerCycle.get(n))) {
+								diffItems++;
+								continue;
+							}
+						}
+						diffItems = Q_old.get(i).itemPerCycle.size() - diffItems;
+					}else {
+						for(int n = 0; n < Q_old.get(i).itemPerCycle.size(); n++) {
+							if(Q.get(j).itemPerCycle.contains(Q_old.get(i).itemPerCycle.get(n))) {
+								diffItems++;
+								continue;
+							}
+						}
+						diffItems = Q.get(j).itemPerCycle.size() - diffItems;
+					}
+					
+					//get min max avg
+					if(diffItems < minDiffItems) {
+						minDiffItems = diffItems;
+					}
+					if(diffItems > maxDiffItems) {
+						maxDiffItems = diffItems;
+					}
+					avgDiffItems += diffItems;
+					
+					
+					/*System.out.println("Q_old links: " + Q_old.get(i).links);
+					System.out.println("Q links: " + Q.get(j).links);
+					System.out.println("diffNumLinks: " + diffNumLinks);
+					System.out.println("diffLinks: " + diffLinks);
+					System.out.println("-----");
+					System.out.println("Q_old dev-items: " + Q_old.get(i).itemPerCycle);
+					System.out.println("Q dev-items: " + Q.get(j).itemPerCycle);
+					System.out.println("diffNumItems: " + diffNumItems);
+					System.out.println("diffItems: " + diffItems);
+					System.out.println();*/
+					
+					foundMyBrother = true;
+					break;
+				}
+			}
+			if(foundMyBrother) { //stop looking, because you are found its brother's cycle
+				continue;
+			}
+		}
+		
+		//System.out.println("size: " + size);
+		changesOnLinksAndItems[0] = minDiffNumLinks;
+		changesOnLinksAndItems[1] = minDiffLinks;
+		changesOnLinksAndItems[2] = minDiffNumItems;
+		changesOnLinksAndItems[3] = minDiffItems;
+		
+		changesOnLinksAndItems[4] = maxDiffNumLinks;
+		changesOnLinksAndItems[5] = maxDiffLinks;
+		changesOnLinksAndItems[6] = maxDiffNumItems;
+		changesOnLinksAndItems[7] = maxDiffItems;
+		
+		changesOnLinksAndItems[8] = avgDiffNumLinks/size;
+		changesOnLinksAndItems[9] = avgDiffLinks/size;
+		changesOnLinksAndItems[10] = avgDiffNumItems/size;
+		changesOnLinksAndItems[11] = avgDiffItems/size;
+		
+		/*for(int i = 0; i < changesOnLinksAndItems.length; i++) {
+			System.out.println("changesOnLinksAndItems[" + i + "]: " + changesOnLinksAndItems[i]);
+		}*/
+		
+		
+		return changesOnLinksAndItems;
+	}
+	
+	
 	
 }

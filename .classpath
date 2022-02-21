@@ -2,6 +2,10 @@
 <classpath>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="src" path=""/>
-	<classpathentry exported="true" kind="lib" path="/opt/ibm/ILOG/CPLEX_Studio129/cplex/lib/cplex.jar"/>
+	<classpathentry exported="true" kind="lib" path="/opt/ibm/ILOG/CPLEX_Studio129/cplex/lib/cplex.jar">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="/opt/ibm/ILOG/CPLEX_Studio129/cplex/bin/x86-64_linux"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path=""/>
 </classpath>

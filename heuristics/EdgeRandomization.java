@@ -363,35 +363,6 @@ public Hashtable<Integer, Cycle> runER() {
 }
 
 
-//this function verifies if all spatial requirements are being satisfied by the Edge Randomization method
-public boolean veryMonAppSpatialRequirements(ArrayList<MonitoringApp> monApps) {
-	
-	for(int i = 0; i < monApps.size(); i++) {
-		for(int j = 0; j < monApps.get(i).spatialRequirements.size(); j++) {
-			for(int k = 0; k < monApps.get(i).spatialRequirements.get(j).size(); k++) {
-				int item = monApps.get(i).spatialRequirements.get(j).get(k);
-				int dev = monApps.get(i).deviceToBeCollected.get(j);
-				Tuple devItem = new Tuple(dev,item);
-				
-				boolean isThere = false;
-				for(Cycle c : this.cycles) {
-					isThere = c.itemPerCycle.contains(devItem);
-					if(isThere) {
-						isThere = true;
-						break;
-					}
-				}
-				if(!isThere) {
-					return false;
-				}
-			}
-		}
-	}
-	
-	return true;
-	
-}
-
 	
 public int chooseCycleStart() {
 	int bestNode = 0;
@@ -945,43 +916,6 @@ public void improvementMethod() throws CloneNotSupportedException {
 			}
 		}
 	}
-}
-
-private boolean verifyCycle(Cycle c, ArrayList<Cycle> already_checked_cycles) {
-	boolean different = true;
-	for(Cycle checked: already_checked_cycles) {
-		if(!different) {
-			break;
-		}
-		if(c.capacity_used != checked.capacity_used) {
-			continue;
-		}else {
-			if(c.itemPerCycle.isEmpty() && checked.itemPerCycle.isEmpty()) {
-				if(!c.nodes.equals(checked.nodes)) {
-					different = false;
-					break;
-				}
-			}else {
-				//verifico os itens
-				if(c.itemPerCycle.size() != checked.itemPerCycle.size()) {
-					continue;
-				}else {
-					for(int i = 0; i < c.itemPerCycle.size(); i++) {
-						if(c.itemPerCycle.get(i).first == checked.itemPerCycle.get(i).first) {
-							if(c.itemPerCycle.get(i).second == checked.itemPerCycle.get(i).second) {
-								different = false;
-							}else {
-								break;
-							}
-						}else {
-							break;
-						}
-					}
-				}
-			}
-		}
-	}
-	return different;
 }
 
 

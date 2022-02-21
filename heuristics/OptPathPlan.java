@@ -341,7 +341,7 @@ public class OptPathPlan {
 					for(Integer node : itemsFromNodes) {
 						int k = 0;
 						for(Tuple di: Q.get(i).itemPerCycle) {
-							if(di.getDevice() == node) {
+							if(di.getFirst() == node) {
 								dev_items_u.add(di);
 							}
 							k++;

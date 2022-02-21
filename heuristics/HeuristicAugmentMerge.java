@@ -153,8 +153,8 @@ public class HeuristicAugmentMerge {
 			ArrayList<IloConstraint> res2 = new ArrayList<IloConstraint>();
 			for(int j = 0; j < this.cycles.get(p).itemPerCycle.size(); j++) {
 				
-				iAux =  this.cycles.get(p).itemPerCycle.get(j).device;
-				jAux =  this.cycles.get(p).itemPerCycle.get(j).item;
+				iAux =  this.cycles.get(p).itemPerCycle.get(j).getFirst();
+				jAux =  this.cycles.get(p).itemPerCycle.get(j).getSecond();
 						
 				IloLinearNumExpr expr = cplexModel.linearNumExpr();
 				expr.addTerm(1.0, z[p][jAux][iAux]);

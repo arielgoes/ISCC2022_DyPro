@@ -13,6 +13,7 @@ import java.util.Random;
 import java.util.Map.Entry;
 
 import heuristics.Cycle;
+import heuristics.Tuple;
 
 public class MonitoringApp implements Cloneable{
 
@@ -146,7 +147,114 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 
 		return monitoringApps;
 }
+
+
+
+public MonitoringApp generateSingleMonApp(long seed, int numMaxSpatialDependencies, int maxSizeSpatialDependency, int maxFrequency, 
+		int telemetryItemsRouter, int networkSize) {
 	
+	Random rnd = new Random(seed);
+	int telemetryItems;	
+	int contFail = 0;
+	boolean hasItem = false;
+	int telemetryCandidate;
+	
+	
+	MonitoringApp mon = new MonitoringApp();
+	
+	if(numMaxSpatialDependencies < 3) {
+		telemetryItems = 3;
+	}else {
+		do {
+
+			telemetryItems = rnd.nextInt(numMaxSpatialDependencies);
+			
+		}while(telemetryItems < 3);
+	}
+	
+	
+	for(int j = 0; j < telemetryItems; j++) {
+		
+		int size;
+		
+		do {
+			size = rnd.nextInt(maxSizeSpatialDependency+1);
+
+		}while(size <= 1);
+		
+		
+		ArrayList<Integer> spatialItems = null;
+		
+		contFail = 0;
+		do {
+			
+			if (contFail > 20) break; //not possible to create subset
+			
+			spatialItems = new ArrayList<Integer>();
+			
+			while(spatialItems.size() < size) {
+				
+				do{
+					hasItem = false;
+					telemetryCandidate = rnd.nextInt(telemetryItemsRouter);
+					for(int l = 0; l < spatialItems.size(); l++) {
+						if(spatialItems.get(l) == telemetryCandidate) {
+							hasItem = true;
+							break;
+						}
+					}
+					
+				}while(hasItem);
+				
+				spatialItems.add(telemetryCandidate);
+				
+			}
+			
+			Collections.sort(spatialItems);
+			contFail++;
+		}while(hasItemList(mon, spatialItems));
+		
+		if(spatialItems != null) {
+			
+			mon.spatialRequirements.add(spatialItems);
+			mon.deviceToBeCollected.add(rnd.nextInt(networkSize));
+			
+			int freq;
+			
+			do {
+				freq = rnd.nextInt(maxFrequency+1);  //max frequency
+			}while(freq == 0);
+			
+			mon.temporalRequirements.add(freq);
+			
+		}
+		
+	}
+	//initialize history
+	for(int j = 0; j < mon.spatialRequirements.size(); j++) {
+		mon.lastTimeCollected.add(0);
+	}
+	
+	return mon;
+}
+
+
+//This method allows to partially randomize an existing arraylist of monitoring apps, maintaining the other half of monitoring apps unchanged
+public ArrayList<MonitoringApp> halfRandomMonApps(long seed, MonitoringApp monApp, ArrayList<MonitoringApp> oldMonApps, int numMaxSpatialDependencies, int maxSizeSpatialDependency,
+		int maxFrequency, int telemetryItemsRouter, int networkSize){
+
+	
+	
+	for(int i = oldMonApps.size()/2; i < oldMonApps.size(); i++) {
+		MonitoringApp newMonApp = monApp.generateSingleMonApp(seed+i, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, networkSize);
+		oldMonApps.set(i, newMonApp);
+		//System.out.println("new mon app: " + newMonApps.get(i));
+	}
+	
+	return oldMonApps;			
+}
+
+
 
 private boolean hasItemList(MonitoringApp monitoring, ArrayList<Integer> spatialItems) {
 		
@@ -169,8 +277,7 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 	for(int i = 0; i < monitoringApps.size(); i++) {
 		System.out.println("Monitoring App " + i);
 		int numSpatialDependencies = monitoringApps.get(i).spatialRequirements.size();
-		//int numDevToBeCollected = monitoringApps.get(i).deviceToBeCollected.size();
-		//System.out.println("NUM SPATIAL: " + numSpatialDependencies + " NUM COLLECTED: " + numDevToBeCollected);
+		
 		for(int k = 0; k < numSpatialDependencies; k++) {
 			
 			System.out.println("   Spatial Req: " + k + " | Device #" + monitoringApps.get(i).deviceToBeCollected.get(k));
@@ -196,59 +303,23 @@ public void printMonitoringApps(ArrayList<MonitoringApp> monitoringApps) {
 	
 }
 
-//checks whether all restriction (spatial) items are covered by one or more probes
-public ArrayList<Integer> MonRestrictionVerifier(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
-	//verify spatial constraints across probes
-	int restrictionItem = -1;
-	ArrayList<Integer> unsatisfiedMonItems = new ArrayList<Integer>(); //adds unsatisfied items after iterating all cycles
-	for(int i = 0; i < monitoringApps.size(); i++) {
-		int numSpatialDependencies = monitoringApps.get(i).spatialRequirements.size();
-		for(int k = 0; k < numSpatialDependencies; k++) {
-			for(int l = 0; l < monitoringApps.get(i).spatialRequirements.get(k).size(); l++) {		
-				restrictionItem = monitoringApps.get(i).spatialRequirements.get(k).get(l);
-				int numCycles = cycles.size();
-				boolean hasItem = false;
-				for(int z = 0; z < numCycles; z++) {
-					if(cycles.get(z).hasItem(restrictionItem)) {
-						hasItem = true;
-						break;
-					}
-				}
-				if(!hasItem) {
-					unsatisfiedMonItems.add(restrictionItem);	
-				}
-				
-			}
+
+
+//just counts the input number of spatial requirements to be collected later
+public int countSpatialRequirements(ArrayList<MonitoringApp> monitoringApps) {
+	int numSpatialReqs = 0;
+	
+	for(int a = 0; a < monitoringApps.size(); a++) {
+		for(int b = 0; b < monitoringApps.get(a).spatialRequirements.size(); b++) {
+			numSpatialReqs++;
 		}
 	}
 	
-	return unsatisfiedMonItems;
+	return numSpatialReqs; 
 }
 
-//checks whether all restriction (spatial) items are covered by a single probe cycle (UNDER DEVELOPMENT)
-/*public ArrayList<Integer> MonRestrictionVerifier2(ArrayList<Cycle> cycles, ArrayList<MonitoringApp> monitoringApps) {
-	//verify spatial constraints across probes
-	int restrictionItem = -1;
-	ArrayList<Integer> unsatisfiedMonItems = new ArrayList<Integer>(); //adds unsatisfied items after iterating all cycles
-	int numCycles = cycles.size();
-	
-	for(int z = 0; z < numCycles; z++) {
-		for(int i = 0; i < monitoringApps.size(); i++) {
-			int numSpatialDependencies = monitoringApps.get(i).spatialRequirements.size();
-			for(int k = 0; k < numSpatialDependencies; k++) {
-				for(int l = 0; l < monitoringApps.get(i).spatialRequirements.get(k).size(); l++) {		
-					restrictionItem = monitoringApps.get(i).spatialRequirements.get(k).get(l);
-					if(!cycles.get(z).hasItem(restrictionItem)) {
-						unsatisfiedMonItems.add(restrictionItem);
-					}
-				}
-			}
-		}
-	}
-	
-	
-	return unsatisfiedMonItems;
-}*/
+
+
 
 
 
