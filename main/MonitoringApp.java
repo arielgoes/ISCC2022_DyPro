@@ -51,7 +51,7 @@ public MonitoringApp clone() throws CloneNotSupportedException{
 
 	
 ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, int numMaxSpatialDependencies,
-			int maxSizeSpatialDependency, int maxFrequency, int telemetryItemsRouter, int networkSize){
+			int maxSizeSpatialDependency, int maxFrequency, int telemetryItemsRouter, int numDevSameReq, int networkSize){
 
 		Random rnd = new Random(seed);
 		int telemetryItems;
@@ -71,7 +71,6 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 				do {
 
 					telemetryItems = rnd.nextInt(numMaxSpatialDependencies);
-					
 				}while(telemetryItems < 3);
 			}
 			
@@ -80,12 +79,10 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 			MonitoringApp mon = new MonitoringApp();
 			
 			for(int j = 0; j < telemetryItems; j++) {
-				
 				int size;
 				
 				do {
 					size = rnd.nextInt(maxSizeSpatialDependency+1);
-
 				}while(size <= 1);
 				
 				
@@ -96,11 +93,13 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 					
 					if (contFail > 20) break; //not possible to create subset
 					
+					
 					spatialItems = new ArrayList<Integer>();
 					
 					while(spatialItems.size() < size) {
 						
 						do{
+							//System.out.println("aqui");
 							hasItem = false;
 							telemetryCandidate = rnd.nextInt(telemetryItemsRouter);
 							for(int l = 0; l < spatialItems.size(); l++) {
@@ -144,6 +143,36 @@ ArrayList<MonitoringApp> generateMonitoringApps(long seed, int numMonitoring, in
 			monitoringApps.add(mon);
 			
 		}
+		
+		
+		if(numDevSameReq > 1) {
+			for(int num = 0; num < numDevSameReq-1; num++) {
+				for(int a = 0; a < monitoringApps.size(); a++) {
+					int originalLength = monitoringApps.get(a).deviceToBeCollected.size();
+					for(int c = 0; c < originalLength; c++) {
+						int devFromSpatial = monitoringApps.get(a).deviceToBeCollected.get(c); 
+						int newDev = rnd.nextInt(networkSize); 
+						
+						while(devFromSpatial == newDev) {
+							newDev = rnd.nextInt(networkSize);
+						}
+						
+						ArrayList<Integer> spatialItems = new ArrayList<Integer>();
+						for(Integer item : monitoringApps.get(a).spatialRequirements.get(c)) {
+							spatialItems.add(item);
+						}
+						monitoringApps.get(a).spatialRequirements.add(spatialItems);
+						monitoringApps.get(a).deviceToBeCollected.add(newDev);
+					}
+					
+					//initialize history
+					for(int j = 0; j < monitoringApps.get(a).spatialRequirements.size(); j++) {
+						monitoringApps.get(a).lastTimeCollected.add(0);
+					}
+				}
+			}
+		}
+		
 
 		return monitoringApps;
 }

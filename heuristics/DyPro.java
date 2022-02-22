@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.Map.Entry;
 
 
-public class MonAppSpatialTemporalApproaches{
+public class DyPro{
 	public ArrayList<Cycle> cycles;
 	public ArrayList<MonitoringApp> monApps;
 	public int[][] costShortestPath;
@@ -30,7 +30,7 @@ public class MonAppSpatialTemporalApproaches{
 	public boolean flagEqualDepot = false;
 	public int seedChanger; //each time a link is created, we change the seed, incrementing it by 1
 	
-	public MonAppSpatialTemporalApproaches(NetworkInfrastructure infra, long seed, int capacityProbe) {
+	public DyPro(NetworkInfrastructure infra, long seed, int capacityProbe) {
 		this.cycles = new ArrayList<Cycle>();
 		this.infra = infra;
 		this.costShortestPath = new int[infra.size][infra.size];
@@ -124,8 +124,15 @@ public void firstApproach(ArrayList<MonitoringApp> monitoringApps, int capacityP
 		Pair<Integer,Integer> link = Pair.create(currNode, -1);
 		
 		//choose depot
-		if(monApps.size() > 0) {
-			depot = monApps.get(0).deviceToBeCollected.get(0);
+		
+		if(this.monApps.size() > 0) {
+			for(int i = 0; i < this.monApps.size(); i++) {
+				if(!this.monApps.get(i).deviceToBeCollected.isEmpty()) {
+					depot = this.monApps.get(0).deviceToBeCollected.get(0);
+					break;
+				}
+			}
+			
 			//System.out.println("DEPOT... " + depot);
 		}else {
 			break;
@@ -192,7 +199,8 @@ public void firstApproach(ArrayList<MonitoringApp> monitoringApps, int capacityP
 					
 
 					//check for other spatial requirements that could be simultaneously satisfied by the same device
-					for(int aa = this.monApps.size()-1; aa >= 0; aa--) {
+					//NOTE: SOMETIMES IT WORKS BETTER, AND SOMETIMES NOT
+					/*for(int aa = this.monApps.size()-1; aa >= 0; aa--) {
 						for(int bb = this.monApps.get(aa).spatialRequirements.size()-1; bb >= 0; bb--) {
 							int countItems = 0;
 							int sizeSpatialItems = this.monApps.get(aa).spatialRequirements.get(bb).size();
@@ -214,8 +222,12 @@ public void firstApproach(ArrayList<MonitoringApp> monitoringApps, int capacityP
 								this.monApps.get(aa).spatialRequirements.remove(bb);
 								this.monApps.get(aa).deviceToBeCollected.remove(bb);
 							}
+							
+							if(this.monApps.get(aa).deviceToBeCollected.isEmpty()) {
+								this.monApps.remove(aa);
+							}
 						}
-					}	
+					}*/
 						
 					
 					
@@ -832,9 +844,10 @@ public void probeUsageOptimizer() {
 public void dynamicProbeGenerator(ArrayList<MonitoringApp> newMonApps, int numMaxSpatialDependencies, int maxSizeSpatialDependency) throws CloneNotSupportedException {
 	
 	this.monApps = newMonApps;
+	int numSpatialReqs = this.monApps.get(0).spatialRequirements.size();
 	
 	//int[0]: mon app id, int[1]: dev id (spatial req id), int[2]: item position
-	boolean[][][] collected = new boolean[this.monApps.size()][numMaxSpatialDependencies-1][maxSizeSpatialDependency]; 
+	boolean[][][] collected = new boolean[this.monApps.size()][numSpatialReqs][maxSizeSpatialDependency];
 	
 	//Check what spatial requirements are already satisfied by the previous probe scheme
 	for(int i = this.cycles.size() - 1; i >= 0; --i){
@@ -1204,7 +1217,7 @@ public void dynamicProbeGenerator(ArrayList<MonitoringApp> newMonApps, int numMa
 	//Collections.sort(this.cycles, Cycle.CycleCapacityUsedDescending);
 	
 	//track fully satisfied spatial requirements to remove partially collected ones (or shadow ones -- i.e., satisfied twice or more)
-	boolean[][][] whatProbesSatisfied = new boolean[this.cycles.size()][this.monApps.size()][numMaxSpatialDependencies]; //[index 0]: probe id, [index 1]: mon app, [index 2]: spatial req
+	boolean[][][] whatProbesSatisfied = new boolean[this.cycles.size()][this.monApps.size()][numSpatialReqs]; //[index 0]: probe id, [index 1]: mon app, [index 2]: spatial req
 	for(int a = 0; a < this.monApps.size(); a++) {
 		for(int b = 0; b < this.monApps.get(a).spatialRequirements.size(); b++) {
 			int sizeCurrSpatial = this.monApps.get(a).spatialRequirements.get(b).size();
@@ -1426,7 +1439,7 @@ public void dynamicProbeGenerator(ArrayList<MonitoringApp> newMonApps, int numMa
 	
 
 	
-	whatProbesSatisfied = new boolean[this.cycles.size()][this.monApps.size()][numMaxSpatialDependencies]; //[index 0]: probe id, [index 1]: mon app, [index 2]: spatial req
+	whatProbesSatisfied = new boolean[this.cycles.size()][this.monApps.size()][numSpatialReqs]; //[index 0]: probe id, [index 1]: mon app, [index 2]: spatial req
 	for(int a = 0; a < this.monApps.size(); a++) {
 		for(int b = 0; b < this.monApps.get(a).spatialRequirements.size(); b++) {
 			int sizeCurrSpatial = this.monApps.get(a).spatialRequirements.get(b).size();
@@ -1542,7 +1555,7 @@ public void dynamicProbeGenerator(ArrayList<MonitoringApp> newMonApps, int numMa
 	}
 
 	
-	//Create more probes, if needed 	
+	//Create more probes, if needed
 	firstApproach(this.monApps, this.capacityProbe, false); //this heuristic already sort the cycles at the end
 	probeUsageOptimizer();
 	

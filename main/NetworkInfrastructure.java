@@ -1,4 +1,5 @@
 package main;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -6,6 +7,10 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Random;
+
+import org.w3c.dom.Node;
+
+import heuristics.Pair;
 
 public class NetworkInfrastructure {
 
@@ -22,32 +27,24 @@ public class NetworkInfrastructure {
 	public int[][] items; //row = routers, col = items
 	public int telemetryItemsRouter;	//total number of possible existing items in any router
 	public int maxSizeTelemetryItemsRouter; //max possible item size
-	public int[] itemPriority;
 	public long seed;
+	public int fixedEdgeCost;
 	
 	public NetworkInfrastructure(int size, String filePath, int telemetryItemsRouter, int maxSizeTelemetryItemsRouter, long seed) {
 		
-		this.size = size;
 		this.filePath = filePath;
-		this.numTelemetryItemsRouter = new int[size];
-		this.items = new int[size][telemetryItemsRouter];
+		this.size = size;
 		this.telemetryItemsRouter = telemetryItemsRouter;
 		this.maxSizeTelemetryItemsRouter = maxSizeTelemetryItemsRouter;
 		this.graph = new int[size][size];
 		this.dist = new int[size][size];
-		this.itemPriority = new int[telemetryItemsRouter];
+		this.numTelemetryItemsRouter = new int[size];
+		this.items = new int[size][telemetryItemsRouter];
 		this.seed = seed;
-		
+		this.fixedEdgeCost = 1;
 		
 	}
 	
-	
-	
-	/**
-	 * This method loads network topology without any randomness
-	 * @throws FileNotFoundException
-	 */
-	//read .dat
 	
 	void loadTopologyDat() throws FileNotFoundException {
 		
@@ -311,10 +308,9 @@ public class NetworkInfrastructure {
 		
 	}
 	
-	void generateRndTopology(double linkProbability, long seed) {
+	void generateRndTopology(long seed, double linkProbability) {
 		
 		Random rnd = new Random(seed);
-		//Random rnd = new Random(123);
 		
 		for(int i = 0; i < size; i++) {
 			boolean forceToLink = true;
@@ -369,7 +365,6 @@ public class NetworkInfrastructure {
 			do {
 				//sizeTelemetryItems[j] = 2;rnd.nextInt(maxSizeTelemetryItemsRouter);
 				sizeTelemetryItems[j] = rnd.nextInt(maxSizeTelemetryItemsRouter);
-				itemPriority[j] = rnd.nextInt(maxSizeTelemetryItemsRouter);
 				//System.out.println("sizeTelemetryItems[" + j + "] = " + sizeTelemetryItems[j]);
 			}while(sizeTelemetryItems[j] == 0);
 		}
@@ -558,12 +553,10 @@ public class NetworkInfrastructure {
 			prev[i] = -1;
 			visited[i] = 0;
 			availableNodes.add(i);
-			
 		}
 		
 		visited[nodeA] = 1;
 		dist[nodeA] = 0;
-		
 		
 		while(!availableNodes.isEmpty()) {
 			
@@ -746,6 +739,120 @@ public class NetworkInfrastructure {
 				this.sizeTelemetryItems[j] = this.telemetryItemsRouter;	
 		}
 		
+	}
+	
+	
+	
+	public ArrayList<Integer> getShortestPath2(int[] nodes) {
+		
+		if(nodes.length < 2) {
+			System.out.println("Exception: At least a start and end-point must be specified!");
+			System.out.close();
+		}
+		
+		int nodeA = nodes[0];
+		int nodeB = nodes[1];
+		//System.out.println("nodeA: " + nodeA + " nodeB: " + nodeB);
+		
+		ArrayList<Integer> shortPath = new ArrayList<Integer>();
+		ArrayList<Integer> availableNodes = new ArrayList<Integer>();
+		
+		if(nodeA == nodeB) return shortPath;
+		
+		int currentNode = -1;
+		int currentAdj = -1;
+		
+		int dist[] = new int[size];
+		int prev[] = new int[size];
+		
+		int visited[]  = new int[size];
+		if(nodes.length > 2) {
+			for(int k = 2; k < nodes.length; k++) {
+				for(int j = 0; j < visited.length; j++) {
+					if(j == nodes[k]) {
+						visited[j] = 1;
+					}
+				}
+			}
+		}
+		
+		//initialize;
+		for(int i = 0; i < this.size; i++) {
+			dist[i] = Integer.MAX_VALUE;
+			prev[i] = -1;
+			visited[i] = 0;
+			boolean insert = true;
+			for(int k = 2; k < nodes.length; k++) {
+				if(i == nodes[k]) {
+					insert = false;
+				}
+			}
+			
+			if(insert) {
+				availableNodes.add(i);	
+			}	
+		}
+		
+		//System.out.println("availableNodes: " + availableNodes);
+		
+		visited[nodeA] = 1;
+		dist[nodeA] = 0;
+		
+		while(!availableNodes.isEmpty()) {
+			
+			currentNode = getMin(availableNodes, dist, visited);
+			if(currentNode == -1) return new ArrayList<Integer>();
+			visited[currentNode] = 1;
+			
+			int k;
+			for(k = 0; k < availableNodes.size(); k++) {
+				if (availableNodes.get(k) == currentNode) break;
+			}
+			availableNodes.remove(k);
+			
+			ArrayList<Integer> adj = getAdj(currentNode);
+			//System.out.println("curr Node: " + currentNode + " -- adj: " + adj);
+			
+			for(int i = 0; i < adj.size(); i++) {
+				
+				currentAdj = adj.get(i);
+				
+				if(visited[currentAdj] == 0) {
+					if(dist[currentAdj] > dist[currentNode] + this.graph[currentNode][currentAdj]) {
+						dist[currentAdj] = dist[currentNode] + this.graph[currentNode][currentAdj];
+						prev[currentAdj] = currentNode;
+					}
+				}
+				
+			}
+			
+		}
+		
+		shortPath = buildPath(nodeA, nodeB, prev);
+		//System.out.println("nodeA: " + nodeA + " nodeB: " + nodeB + " shortPath: " + shortPath);
+		
+		return shortPath;
+	}
+	
+	
+	public ArrayList<Pair<Integer,Integer>> setSubGraph(int[][] graph, int[] nodes) {		
+		ArrayList<Pair<Integer,Integer>> storeLinks = new ArrayList<Pair<Integer,Integer>>(); 
+		if(nodes.length > 2) {
+			for(int k = 2; k < nodes.length; k++) {
+				for(int i = 0; i < graph.length; i++) {
+					for(int j = 0; j < graph.length; j++) {
+						if((i == nodes[k] || j == nodes[k]) && graph[i][j] != 0) {
+							Pair<Integer,Integer> link = Pair.create(i,j);
+							storeLinks.add(link);
+							graph[i][j] = 0;
+						}
+						//System.out.printf("infra.graph[%d][%d] = %d  ", i,j,graph[i][j]);
+					}
+					//System.out.println();
+				}
+			}
+		}
+		return storeLinks;
 	}
 	
 	

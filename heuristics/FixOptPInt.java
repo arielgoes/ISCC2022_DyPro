@@ -17,7 +17,7 @@ public class FixOptPInt {
 	public NetworkInfrastructure infra;
 	public int capacityProbe;
 	public int maxProbes;
-	public long seed;
+	public long seed; 
 	private int numThreads;
 	
 	private int subProblemTimeLimit; 
@@ -922,39 +922,39 @@ public class FixOptPInt {
 	}
 	
 	
+	
 	public ArrayList<Cycle> convertToCycleUnordered() {
-		ArrayList<Cycle> cycles = new ArrayList<Cycle>();
-		
-		//get links		
-		for(int i = 0; i < this.maxProbes; i++) {
-			Cycle c = new Cycle();
-			for(int j = 0; j < this.infra.size; j++) {
-				for(int k = 0; k < this.infra.size; k++) {
-					if(this.xMetrics[i][j][k] == 1) {
-						c.links.add(Pair.create(j, k));
-						c.capacity_used += 1;
-						c.nodes.add(k);
-					}
-				}
-			}
-			c.cycle_id = i;
-			c.nodes.add(0, i);
-			c.nodes.add(c.nodes.size()-1, i);
-			
-			//get items
-			for(int j = 0; j < infra.telemetryItemsRouter; j++) {
-				for(int k = 0; k < infra.size; k++) {
-					if(this.zMetrics[i][j][k] == 1) {
-						c.itemPerCycle.add(new Tuple(k,j));
-						c.capacity_used += infra.sizeTelemetryItems[j];
-					}
+	ArrayList<Cycle> cycles = new ArrayList<Cycle>();
+	
+	//get links		
+	for(int i = 0; i < this.maxProbes; i++) {
+		Cycle c = new Cycle();
+		for(int j = 0; j < this.infra.size; j++) {
+			for(int k = 0; k < this.infra.size; k++) {
+				if(this.xMetrics[i][j][k] == 1) {
+					c.links.add(Pair.create(j, k));
+					c.capacity_used += 1;
+					c.nodes.add(k);
 				}
 			}
 		}
+		c.cycle_id = i;
+		c.nodes.add(0, i);
+		c.nodes.add(c.nodes.size()-1, i);
 		
-		return cycles;
+		//get items
+		for(int j = 0; j < infra.telemetryItemsRouter; j++) {
+			for(int k = 0; k < infra.size; k++) {
+				if(this.zMetrics[i][j][k] == 1) {
+					c.itemPerCycle.add(new Tuple(k,j));
+					c.capacity_used += infra.sizeTelemetryItems[j];
+				}
+			}
+		}
 	}
 	
-	
-	
+	return cycles;
+	}
+
+
 }
