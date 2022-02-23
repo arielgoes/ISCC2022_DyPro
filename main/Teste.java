@@ -137,12 +137,12 @@ public class Teste {
 			
 			
 			//FixOpt
-			/*double timeFixOpt = System.nanoTime();
+			double timeFixOpt = System.nanoTime();
 			fixOpt = new FixOptPInt(infra, capacityProbe, maxProbes, numThreads, (long) seed, subProblemTimeLimit, 
 					globalTimeLimit, initSizeComb, maxSizeComb, countIterNotImprovMax);
 			double fixOptSol = fixOpt.run(pathPlanCycles.Q);
 			timeFixOpt = (System.nanoTime() - timeFixOpt)*0.000000001;
-			fixOpt.convertToCycleUnordered(); //fetch the links, but they are unordered*/
+			fixOpt.convertToCycleUnordered(); //fetch the links, but they are unordered
 			
 			
 			/*System.out.println("System.exit(0)");
@@ -173,9 +173,7 @@ public class Teste {
 			//probeUsageER = sts.probeUsage(fixOpt, opt, maxProbes, er.cycles, capacityProbe, 2);
 			probeUsageOPP = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 2);
 			probeUsageDyPro = sts.probeUsage(fixOpt, opt, maxProbes, dyPro.cycles, capacityProbe, 2);
-			//probeUsageFixOpt = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 1);
-
-			//probeUsageFixOpt = sts.probeUsage(fixOpt, opt, maxProbes, er.cycles, capacityProbe, 1);
+			probeUsageFixOpt = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 1);
 			
 			
 			int numSpatialReqs = monApps.countSpatialRequirements(copyMonApps); //total # of existing spatial requirements
@@ -184,8 +182,8 @@ public class Teste {
 			//int numSatisfiedER = sts.verifySatisfiedSpatialRequirements(copyMonApps, er.cycles);
 			int numSatisfiedOPP = sts.verifySatisfiedSpatialRequirements(copyMonApps, pathPlanCycles.Q);
 			int numSatisfiedDyPro = sts.verifySatisfiedSpatialRequirements(copyMonApps, dyPro.cycles);
-			//ArrayList<Cycle> fixOptCycles = fixOpt.convertToCycleUnordered();
-			//int numSatisfiedFixOpt = sts.verifySatisfiedSpatialRequirements(copyMonApps, fixOptCycles);
+			ArrayList<Cycle> fixOptCycles = fixOpt.convertToCycleUnordered();
+			int numSatisfiedFixOpt = sts.verifySatisfiedSpatialRequirements(copyMonApps, fixOptCycles);
 			
 			
 			//device overhead: # of probes/paths pass through devices (min, max, avg)
@@ -196,7 +194,7 @@ public class Teste {
 			//devOverheadER = sts.devOverhead(fixOpt, opt, er.cycles, maxProbes, networkSize, 2);
 			devOverheadOPP = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 2);
 			devOverheadDyPro = sts.devOverhead(fixOpt, opt, dyPro.cycles, maxProbes, networkSize, 2);
-			//devOverheadFixOpt = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 1);
+			devOverheadFixOpt = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 1);
 			
 			//link overhead: # of probes/paths pass through links (min, max, avg)
 			//double[] linkOverheadER = new double[3];
@@ -206,7 +204,7 @@ public class Teste {
 			//linkOverheadER = sts.linkOverhead(infra, fixOpt, opt, maxProbes, er.cycles, networkSize, 2);
 			linkOverheadOPP = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 2);
 			linkOverheadDyPro = sts.linkOverhead(infra, fixOpt, opt, maxProbes, dyPro.cycles, networkSize, 2);
-			//linkOverheadFixOpt = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 1);
+			linkOverheadFixOpt = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 1);
 
 			
 			
@@ -236,11 +234,11 @@ public class Teste {
 					";" + numDevSameReq);
 			
 			//FixOpt
-			/*System.out.println("FixOpt" + ";" + (int)fixOptSol + ";" + timeFixOpt + ";" + seed + ";" + fixOpt.infra.size + ";" + fixOpt.infra.telemetryItemsRouter +
+			System.out.println("FixOpt" + ";" + (int)fixOptSol + ";" + timeFixOpt + ";" + seed + ";" + fixOpt.infra.size + ";" + fixOpt.infra.telemetryItemsRouter +
 					";" + fixOpt.infra.maxSizeTelemetryItemsRouter + ";" + maxProbes + ";" + capacityProbe + ";" + (int)probeUsageFixOpt[0] + ";" + 
 					(int)probeUsageFixOpt[1] + ";" + probeUsageFixOpt[2] + ";" + numSatisfiedFixOpt + ";" + numSpatialReqs + ";" + devOverheadFixOpt[0] +
 					";" + devOverheadFixOpt[1] + ";" + devOverheadFixOpt[2] + ";" + linkOverheadFixOpt[0] + ";" + linkOverheadFixOpt[1] + ";" +
-					linkOverheadFixOpt[2] + ";" + numDevSameReq);*/
+					linkOverheadFixOpt[2] + ";" + numDevSameReq);
 			
 			
 		}

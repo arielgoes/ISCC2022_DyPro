@@ -951,6 +951,7 @@ public class FixOptPInt {
 				}
 			}
 		}
+		cycles.add(c);
 	}
 	
 	return cycles;
