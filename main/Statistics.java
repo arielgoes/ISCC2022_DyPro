@@ -646,7 +646,7 @@ public class Statistics {
 	
 	//verify how many spatial requirements are being satisfied by an heuristic
 	public int verifySatisfiedSpatialRequirements(ArrayList<MonitoringApp> copyMonApps, ArrayList<Cycle> cycles) {
-		
+		int unsatisfied = 0;
 		int numSatisfiedReqs = 0;
 		for(int a = 0; a < copyMonApps.size(); a++) {
 			for(int b = 0; b < copyMonApps.get(a).spatialRequirements.size(); b++) {
@@ -667,12 +667,13 @@ public class Statistics {
 					}
 				}
 				
-				/*if(!found) {
-					System.out.println("(not collected) devItems: " + devItems);
-				}*/
+				if(!found) {
+					unsatisfied++;
+					//System.out.println("(not collected) devItems: " + devItems);
+				}
 			}
 		}
-		
+		//System.out.println("unsatisfied: " + unsatisfied);
 		return numSatisfiedReqs;
 	}
 	
@@ -847,6 +848,37 @@ public class Statistics {
 		return changesOnLinksAndItems;
 	}
 	
+	
+	
+	public int[] changesOnMonAppsAttributions(ArrayList<Cycle> oldCycles, ArrayList<Cycle> currCycles) {		
+		
+		int numItemsOld = 0;
+		int numLinksOld = 0;
+		int numCyclesOld = oldCycles.size();
+		for(int i = 0; i < numCyclesOld; i++) {
+			numItemsOld += oldCycles.get(i).itemPerCycle.size();
+			numLinksOld += oldCycles.get(i).links.size();
+		}
+		
+		int numItemsCurr = 0;
+		int numLinksCurr = 0;
+		int numCyclesCurr = currCycles.size();
+		for(int i = 0; i < numCyclesCurr; i++) {
+			numItemsCurr += currCycles.get(i).itemPerCycle.size();
+			numLinksCurr += currCycles.get(i).links.size();
+		}
+		
+		int numItemsChanges = Math.abs(numItemsOld - numItemsCurr);
+		int numLinksChanges = Math.abs(numLinksOld - numLinksCurr);
+		int numCyclesChanges = Math.abs(numCyclesOld - numCyclesCurr);
+		
+		int[] changes = new int[3];
+		changes[0] = numItemsChanges;
+		changes[1] = numLinksChanges;
+		changes[2] = numCyclesChanges;
+		
+		return changes;
+	}
 	
 	
 }

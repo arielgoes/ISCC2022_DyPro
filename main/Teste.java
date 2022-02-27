@@ -46,6 +46,7 @@ public class Teste {
 		int maxFrequency = Integer.parseInt(args[16]);
 		int numDevSameReq = Integer.parseInt(args[17]);
 		int seedArg = Integer.parseInt(args[18]);
+		int addSpatialReqs = Integer.parseInt(args[19]);
 		
 		
 		long seed = seedArg;
@@ -98,7 +99,7 @@ public class Teste {
 		}
 		
 		
-		if(itemSize > (capacityProbe - 2) || telemetryItemsRouter < numMaxSpatialDependencies || maxSizeSpatialDependency > numMaxSpatialDependencies) { //infeasible
+		if(itemSize > (capacityProbe - 2) /*|| telemetryItemsRouter < maxSizeSpatialDependency*/) { //infeasible
 			System.out.println("-0" + ";" + "NaN" + ";" 
 					+ infra.size + ";" + infra.telemetryItemsRouter + ";" + infra.maxSizeTelemetryItemsRouter 
 					+ ";" + infra.seed);
@@ -109,7 +110,6 @@ public class Teste {
 			dyPro = new DyPro(infra, seed, capacityProbe);
 			/*int temp[] = new int[2];
 			er = new EdgeRandomization(infra, capacityProbe, (long) seed, maxProbes, temp, false);*/
-			boolean firstIter = true;
 		
 			/*monApps.printMonitoringApps(monitoringApps);
 			System.out.println("====================================================================");
@@ -117,113 +117,132 @@ public class Teste {
 			monApps.printMonitoringApps(monitoringApps);*/
 			
 			
+			//System.out.println("(FIRST SET) MON APPS BEFORE...");
+			//monApps.printMonitoringApps(monitoringApps);
+			
+			
 			//DynMonApp
+			boolean firstIter = true;
 			double timeDynMonApp = System.nanoTime();
-			dyPro.firstApproach(monitoringApps, capacityProbe, firstIter);
+			ArrayList<Cycle> oldCyclesDyPro = new ArrayList<Cycle>();
+			oldCyclesDyPro = dyPro.firstApproach(monitoringApps, capacityProbe, firstIter);
 			timeDynMonApp = (System.nanoTime() - timeDynMonApp)*0.000000001;
-			//dynMonApp.secondApproach(monitoringApps, capacityProbe, firstIter); //the path is repeating nodes/edges (fix it)
-			
-			//ER
-			/*double timeER = System.nanoTime();
-			er.runER();
-			timeER = (System.nanoTime() - timeER)*0.000000001;*/
-			
+			//System.out.println("---------------------------------End First Approach...");
+			//System.exit(0);
 			
 			//OPP
-			double timeOPP = System.nanoTime(); 
+			double timeOPP = System.nanoTime();
+			//ArrayList<Cycle> oldCyclesOPP = new ArrayList<Cycle>();
 			pathPlanCycles = new OptPathPlan(infra, capacityProbe, (long) seed, true);
 			pathPlanCycles.adaptToLinks();
+			/*for(Cycle c : pathPlanCycles.Q) {
+				oldCyclesOPP.add(c.clone());
+			}*/
 			timeOPP = (System.nanoTime() - timeOPP)*0.000000001;
 			
 			
 			//FixOpt
-			double timeFixOpt = System.nanoTime();
+			/*double timeFixOpt = System.nanoTime();
 			fixOpt = new FixOptPInt(infra, capacityProbe, maxProbes, numThreads, (long) seed, subProblemTimeLimit, 
 					globalTimeLimit, initSizeComb, maxSizeComb, countIterNotImprovMax);
 			double fixOptSol = fixOpt.run(pathPlanCycles.Q);
+			ArrayList<Cycle> oldCyclesFixOpt = fixOpt.convertToCycleUnordered();
 			timeFixOpt = (System.nanoTime() - timeFixOpt)*0.000000001;
-			fixOpt.convertToCycleUnordered(); //fetch the links, but they are unordered
+			fixOpt.convertToCycleUnordered(); //fetch the links, but they are unordered*/
 			
 			
 			/*System.out.println("System.exit(0)");
 			System.exit(0);*/
 			
-			//totallty random new mon apps
-			monitoringApps = monApps.generateMonitoringApps(seed+1, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, numDevSameReq, networkSize);
-			ArrayList<MonitoringApp> copyMonApps = monApps.generateMonitoringApps(seed+1, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, numDevSameReq, networkSize);
+			//totallty random new mon apps (new seed)
+			monitoringApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, numDevSameReq, networkSize);
+			ArrayList<MonitoringApp> copyMonApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, numDevSameReq, networkSize);
 			
-			//half stays the same, half is random
-			//monitoringApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, networkSize);
-			//monitoringApps = monApps.halfRandomMonApps(seed, monApps, monitoringApps, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, maxSizeTelemetryItemsRouter, networkSize);
-			//ArrayList<MonitoringApp> copyMonApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, networkSize); 
-			//monApps.halfRandomMonApps(seed, monApps, copyMonApps, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, maxSizeTelemetryItemsRouter, networkSize);
+			//incremental approach to insert new spatial requirements into existing monitoring applications (same seed)
+			//monitoringApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, numDevSameReq, networkSize);
+			//ArrayList<MonitoringApp> copyMonApps = monApps.generateMonitoringApps(seed, numberMonitoringApp, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, numDevSameReq, networkSize);
+			
+			
+			
+			//System.out.println("(SECOND SET) MON APPS BEFORE...");
+			//monApps.printMonitoringApps(monitoringApps);
+			monApps.addSpatialReqsToMonApps(seed, addSpatialReqs, monitoringApps, numMaxSpatialDependencies, maxSizeSpatialDependency, maxFrequency, telemetryItemsRouter, networkSize);
+			//monApps.printMonitoringApps(monitoringApps);
+			
+			//System.exit(0);
+			
+			
 			
 			//optimizer
-			dyPro.dynamicProbeGenerator(monitoringApps,numMaxSpatialDependencies,maxSizeSpatialDependency);
+			dyPro.dynamicProbeGenerator(monitoringApps, maxSizeSpatialDependency, monApps);
+			
+			
+			//System.out.println("(SECOND SET) MON APPS AFTER...");
+			//monApps.printMonitoringApps(monitoringApps);
 			
 			//Statistics
 			Statistics sts = new Statistics();
 			
-			//probe usage
-			//double[] probeUsageER = new double[3]; //(min, max, avg)
-			double[] probeUsageOPP = new double[3];
-			double[] probeUsageDyPro = new double[3]; //(min, max, avg)
-			double[] probeUsageFixOpt = new double[3]; //(min, max, avg)
 			
-			//probeUsageER = sts.probeUsage(fixOpt, opt, maxProbes, er.cycles, capacityProbe, 2);
+			//probe usage
+			double[] probeUsageOPP = new double[3]; //(min, max, avg)
+			double[] probeUsageDyPro = new double[3]; //(min, max, avg)
+			//double[] probeUsageFixOpt = new double[3]; //(min, max, avg)
+			
 			probeUsageOPP = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 2);
 			probeUsageDyPro = sts.probeUsage(fixOpt, opt, maxProbes, dyPro.cycles, capacityProbe, 2);
-			probeUsageFixOpt = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 1);
+			//probeUsageFixOpt = sts.probeUsage(fixOpt, opt, maxProbes, pathPlanCycles.Q, capacityProbe, 1);
 			
 			
 			int numSpatialReqs = monApps.countSpatialRequirements(copyMonApps); //total # of existing spatial requirements
 			//num of satisfied spatial requirements
 			 
-			//int numSatisfiedER = sts.verifySatisfiedSpatialRequirements(copyMonApps, er.cycles);
 			int numSatisfiedOPP = sts.verifySatisfiedSpatialRequirements(copyMonApps, pathPlanCycles.Q);
 			int numSatisfiedDyPro = sts.verifySatisfiedSpatialRequirements(copyMonApps, dyPro.cycles);
-			ArrayList<Cycle> fixOptCycles = fixOpt.convertToCycleUnordered();
-			int numSatisfiedFixOpt = sts.verifySatisfiedSpatialRequirements(copyMonApps, fixOptCycles);
+			//ArrayList<Cycle> fixOptCycles = fixOpt.convertToCycleUnordered();
+			//int numSatisfiedFixOpt = sts.verifySatisfiedSpatialRequirements(copyMonApps, fixOptCycles);
+			
+			
 			
 			
 			//device overhead: # of probes/paths pass through devices (min, max, avg)
-			//double[] devOverheadER = new double[3];
 			double[] devOverheadOPP = new double[3];
 			double[] devOverheadDyPro = new double[3];
-			double[] devOverheadFixOpt = new double[3];
-			//devOverheadER = sts.devOverhead(fixOpt, opt, er.cycles, maxProbes, networkSize, 2);
+			//double[] devOverheadFixOpt = new double[3];
+			
 			devOverheadOPP = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 2);
 			devOverheadDyPro = sts.devOverhead(fixOpt, opt, dyPro.cycles, maxProbes, networkSize, 2);
-			devOverheadFixOpt = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 1);
+			//devOverheadFixOpt = sts.devOverhead(fixOpt, opt, pathPlanCycles.Q, maxProbes, networkSize, 1);
 			
 			//link overhead: # of probes/paths pass through links (min, max, avg)
-			//double[] linkOverheadER = new double[3];
 			double[] linkOverheadOPP = new double[3];
 			double[] linkOverheadDyPro = new double[3];
-			double[] linkOverheadFixOpt = new double[3];
-			//linkOverheadER = sts.linkOverhead(infra, fixOpt, opt, maxProbes, er.cycles, networkSize, 2);
+			//double[] linkOverheadFixOpt = new double[3];
+			
 			linkOverheadOPP = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 2);
 			linkOverheadDyPro = sts.linkOverhead(infra, fixOpt, opt, maxProbes, dyPro.cycles, networkSize, 2);
-			linkOverheadFixOpt = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 1);
+			//linkOverheadFixOpt = sts.linkOverhead(infra, fixOpt, opt, maxProbes, pathPlanCycles.Q, networkSize, 1);
 
+			
+			//changes[0]: changes on # of items // changes[1]: changes on # of links // changes[2]: changes on # of cycles
+			int[] changesOnMonAppsDyPro = new int[3];
+			int[] changesOnMonAppsOPP = new int[3];
+			//int[] changesOnMonAppsFixOpt = new int[3];
+			changesOnMonAppsDyPro = sts.changesOnMonAppsAttributions(oldCyclesDyPro, dyPro.cycles);
+			//changesOnMonAppsOPP = sts.changesOnMonAppsAttributions(oldCyclesOPP, pathPlanCycles.Q);
+			//changesOnMonAppsFixOpt = sts.changesOnMonAppsAttributions(oldCyclesFixOpt, fixOptCycles);
+			
 			
 			
 			//printing statistics
-			//ER
-			/*System.out.println("ER" + ";" + er.cycles.size() + ";" + timeER + ";" + seed + ";" + er.infra.size + ";" + 
-					er.infra.telemetryItemsRouter + ";" + er.infra.maxSizeTelemetryItemsRouter + ";" + maxProbes + ";" +
-					capacityProbe + ";" + (int)probeUsageER[0] + ";" + (int)probeUsageER[1] + ";" + probeUsageER[2] + ";" +
-					numSatisfiedER + ";" + numSpatialReqs + ";" + devOverheadER[0] + ";" + devOverheadER[1] + ";" +
-					devOverheadER[2] + ";" + linkOverheadER[0] + ";" + linkOverheadER[1] + ";" + linkOverheadER[2] + ";" +
-					numDevSameReq);*/
-			
 			//OPP
 			System.out.println("OPP" + ";" + pathPlanCycles.Q.size() + ";" + timeOPP + ";" + seed + ";" + pathPlanCycles.infra.size + ";" + 
 					pathPlanCycles.infra.telemetryItemsRouter + ";" + pathPlanCycles.infra.maxSizeTelemetryItemsRouter + ";" + maxProbes + ";" +
 					capacityProbe + ";" + (int)probeUsageOPP[0] + ";" + (int)probeUsageOPP[1] + ";" + probeUsageOPP[2] + ";" +
 					numSatisfiedOPP + ";" + numSpatialReqs + ";" + devOverheadOPP[0] + ";" + devOverheadOPP[1] + ";" +
 					devOverheadOPP[2] + ";" + linkOverheadOPP[0] + ";" + linkOverheadOPP[1] + ";" + linkOverheadOPP[2] + ";" +
-					numDevSameReq);
+					numDevSameReq + ";" + numberMonitoringApp + ";" + numMaxSpatialDependencies + ";" + maxSizeSpatialDependency +
+					";" + changesOnMonAppsOPP[0] + ";" + changesOnMonAppsOPP[1] + ";" + changesOnMonAppsOPP[2] + ";" + addSpatialReqs);
 			
 			//DynMonApp
 			System.out.println("DyPro" + ";" + dyPro.cycles.size() + ";" + timeDynMonApp + ";" + seed + ";" + dyPro.infra.size + ";" + 
@@ -231,14 +250,16 @@ public class Teste {
 					capacityProbe + ";" + (int)probeUsageDyPro[0] + ";" + (int)probeUsageDyPro[1] + ";" + probeUsageDyPro[2] + ";" +
 					numSatisfiedDyPro + ";" + numSpatialReqs + ";" + devOverheadDyPro[0] + ";" + devOverheadDyPro[1] + ";" +
 					devOverheadDyPro[2] + ";" + linkOverheadDyPro[0] + ";" + linkOverheadDyPro[1] + ";" + linkOverheadDyPro[2] +
-					";" + numDevSameReq);
+					";" + numDevSameReq + ";" + numberMonitoringApp + ";" + numMaxSpatialDependencies + ";" + maxSizeSpatialDependency +
+					";" + changesOnMonAppsDyPro[0] + ";" + changesOnMonAppsDyPro[1] + ";" + changesOnMonAppsDyPro[2] + ";" + addSpatialReqs);
 			
 			//FixOpt
-			System.out.println("FixOpt" + ";" + (int)fixOptSol + ";" + timeFixOpt + ";" + seed + ";" + fixOpt.infra.size + ";" + fixOpt.infra.telemetryItemsRouter +
+			/*System.out.println("FixOpt" + ";" + (int)fixOptSol + ";" + timeFixOpt + ";" + seed + ";" + fixOpt.infra.size + ";" + fixOpt.infra.telemetryItemsRouter +
 					";" + fixOpt.infra.maxSizeTelemetryItemsRouter + ";" + maxProbes + ";" + capacityProbe + ";" + (int)probeUsageFixOpt[0] + ";" + 
 					(int)probeUsageFixOpt[1] + ";" + probeUsageFixOpt[2] + ";" + numSatisfiedFixOpt + ";" + numSpatialReqs + ";" + devOverheadFixOpt[0] +
 					";" + devOverheadFixOpt[1] + ";" + devOverheadFixOpt[2] + ";" + linkOverheadFixOpt[0] + ";" + linkOverheadFixOpt[1] + ";" +
-					linkOverheadFixOpt[2] + ";" + numDevSameReq);
+					linkOverheadFixOpt[2] + ";" + numDevSameReq + ";" + numberMonitoringApp + ";" + numMaxSpatialDependencies + ";" +
+					maxSizeSpatialDependency + ";" + changesOnMonAppsFixOpt[0] + ";" + changesOnMonAppsFixOpt[1] + ";" + changesOnMonAppsFixOpt[2]  + ";" + addSpatialReqs);*/
 			
 			
 		}
